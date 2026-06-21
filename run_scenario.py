@@ -38,8 +38,15 @@ for group in SCENARIO["agent_groups"]:
         size=0.4,
         safe_distance=SCENARIO["safe_distance"],
     )
+
+    positions = random_points(
+        start_zone,
+        group["count"],
+        min_distance=SCENARIO["min_agent_distance"],
+    )
+
     mid_zone = None
-    mid_point = None
+    mid_points = None
 
     if "mid_box_frac" in group:
         mid_zone = make_zone_from_fraction(
@@ -47,17 +54,12 @@ for group in SCENARIO["agent_groups"]:
             group["mid_box_frac"],
             safe_distance=SCENARIO["safe_distance"],
         )
+
         mid_points = random_points(
             mid_zone,
             len(positions),
             min_distance=0.0,
         )
-
-    positions = random_points(
-        start_zone,
-        group["count"],
-        min_distance=SCENARIO["min_agent_distance"],
-    )
 
     agent_groups.append({
         "group_id": group["group_id"],
@@ -66,7 +68,7 @@ for group in SCENARIO["agent_groups"]:
         "goal_zone": goal_zone,
         "goal_area": goal_area,
         "mid_zone": mid_zone,
-        "mid_point": mid_points,
+        "mid_points": mid_points,
     })
 
     total_agents += len(positions)
@@ -96,7 +98,13 @@ for group in agent_groups:
     ax.plot(sx, sy, linewidth=2, label=f"{group['group_id']} start")
 
     gzx, gzy = group["goal_zone"].exterior.xy
-    ax.plot(gzx, gzy, linewidth=2, linestyle="--", label=f"{group['group_id']} goal zone")
+    ax.plot(
+        gzx,
+        gzy,
+        linewidth=2,
+        linestyle="--",
+        label=f"{group['group_id']} goal zone",
+    )
 
     gx, gy = group["goal_area"].exterior.xy
     ax.fill(gx, gy, alpha=0.5)
@@ -108,13 +116,25 @@ for group in agent_groups:
         s=18,
         label=f"{group['group_id']} agents",
     )
+
     if group["mid_zone"] is not None:
         mx, my = group["mid_zone"].exterior.xy
-        ax.plot(mx, my, linewidth=2, linestyle=":", label=f"{group['group_id']} mid")
+        ax.plot(
+            mx,
+            my,
+            linewidth=2,
+            linestyle=":",
+            label=f"{group['group_id']} mid zone",
+        )
+
+        mid_points = group["mid_points"]
         ax.scatter(
-            [group["mid_point"][0]],
-            [group["mid_point"][1]],
-            s=30        )
+            [p[0] for p in mid_points],
+            [p[1] for p in mid_points],
+            s=12,
+            marker="x",
+            label=f"{group['group_id']} mid points",
+        )
 
 ax.set_aspect("equal")
 #ax.legend(fontsize=8)
