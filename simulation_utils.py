@@ -169,23 +169,29 @@ def add_agents_with_mid_goal(
     added = 0
 
     for agent_id, pos in enumerate(positions, start=1):
-        stages = []
-
-        if mid_points is not None:
-            mid_point = mid_points[agent_id - 1]
-            waypoint_id = simulation.add_waypoint_stage(mid_point, mid_distance)
-            stages.append(waypoint_id)
-
-        stages.append(exit_id)
-
-        journey = jps.JourneyDescription(stages)
-        journey_id = simulation.add_journey(journey)
-
         try:
+            if mid_points is not None:
+                mid_point = mid_points[agent_id - 1]
+                waypoint_id = simulation.add_waypoint_stage(mid_point, mid_distance)
+
+                journey = jps.JourneyDescription([waypoint_id, exit_id])
+                journey.set_transition_for_stage(
+                    waypoint_id,
+                    jps.Transition.create_fixed_transition(exit_id),
+                )
+
+                stage_id = waypoint_id
+
+            else:
+                journey = jps.JourneyDescription([exit_id])
+                stage_id = exit_id
+
+            journey_id = simulation.add_journey(journey)
+
             simulation.add_agent(
                 jps.CollisionFreeSpeedModelV2AgentParameters(
                     journey_id=journey_id,
-                    stage_id=stages[0],
+                    stage_id=stage_id,
                     position=pos,
                     desired_speed=random.uniform(speed_min, speed_max),
                     radius=0.12,
@@ -197,7 +203,6 @@ def add_agents_with_mid_goal(
             print(f"Skipped agent {agent_id} at {pos}: {e}")
 
     return added
-
 def run_simulation(simulation, max_iterations):
     while simulation.agent_count() > 0 and simulation.iteration_count() < max_iterations:
         simulation.iterate()
