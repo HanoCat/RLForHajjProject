@@ -156,7 +156,47 @@ def add_agents(simulation, positions, goal_area, speed_min=1.0, speed_max=1.4):
 
     return added
 
+def add_agents_with_mid_goal(
+    simulation,
+    positions,
+    goal_area,
+    mid_points=None,
+    mid_distance=1.0,
+    speed_min=1.0,
+    speed_max=1.4,
+):
+    exit_id = simulation.add_exit_stage(goal_area)
+    added = 0
 
+    for agent_id, pos in enumerate(positions, start=1):
+        stages = []
+
+        if mid_points is not None:
+            mid_point = mid_points[agent_id - 1]
+            waypoint_id = simulation.add_waypoint_stage(mid_point, mid_distance)
+            stages.append(waypoint_id)
+
+        stages.append(exit_id)
+
+        journey = jps.JourneyDescription(stages)
+        journey_id = simulation.add_journey(journey)
+
+        try:
+            simulation.add_agent(
+                jps.CollisionFreeSpeedModelV2AgentParameters(
+                    journey_id=journey_id,
+                    stage_id=stages[0],
+                    position=pos,
+                    desired_speed=random.uniform(speed_min, speed_max),
+                    radius=0.12,
+                )
+            )
+            added += 1
+
+        except RuntimeError as e:
+            print(f"Skipped agent {agent_id} at {pos}: {e}")
+
+    return added
 
 def run_simulation(simulation, max_iterations):
     while simulation.agent_count() > 0 and simulation.iteration_count() < max_iterations:

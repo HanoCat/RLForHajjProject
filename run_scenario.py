@@ -47,8 +47,11 @@ for group in SCENARIO["agent_groups"]:
             group["mid_box_frac"],
             safe_distance=SCENARIO["safe_distance"],
         )
-        p = mid_zone.representative_point()
-        mid_point = (p.x, p.y)
+        mid_points = random_points(
+            mid_zone,
+            len(positions),
+            min_distance=0.0,
+        )
 
     positions = random_points(
         start_zone,
@@ -63,7 +66,7 @@ for group in SCENARIO["agent_groups"]:
         "goal_zone": goal_zone,
         "goal_area": goal_area,
         "mid_zone": mid_zone,
-        "mid_point": mid_point,
+        "mid_point": mid_points,
     })
 
     total_agents += len(positions)
@@ -111,9 +114,7 @@ for group in agent_groups:
         ax.scatter(
             [group["mid_point"][0]],
             [group["mid_point"][1]],
-            s=30,
-            marker="x",
-        )
+            s=30        )
 
 ax.set_aspect("equal")
 #ax.legend(fontsize=8)
@@ -134,7 +135,7 @@ for group in agent_groups:
         simulation,
         group["positions"],
         group["goal_area"],
-        mid_point=group["mid_point"],
+        mid_points=group["mid_points"],
         mid_distance=1.0,
         speed_min=SCENARIO["speed_min"],
         speed_max=SCENARIO["speed_max"],
