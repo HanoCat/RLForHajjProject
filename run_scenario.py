@@ -9,7 +9,7 @@ from simulation_utils import (
     make_convex_goal_from_zone,
     random_points,
     create_simulation,
-    add_agents_with_mid_goal,
+    add_agents,
     run_simulation,
     save_animation,
 )
@@ -45,6 +45,7 @@ for group in SCENARIO["agent_groups"]:
         min_distance=SCENARIO["min_agent_distance"],
     )
 
+    ''' 
     mid_zone = None
     mid_points = None
 
@@ -60,6 +61,7 @@ for group in SCENARIO["agent_groups"]:
             len(positions),
             min_distance=0.0,
         )
+    '''
 
     agent_groups.append({
         "group_id": group["group_id"],
@@ -67,8 +69,6 @@ for group in SCENARIO["agent_groups"]:
         "start_zone": start_zone,
         "goal_zone": goal_zone,
         "goal_area": goal_area,
-        "mid_zone": mid_zone,
-        "mid_points": mid_points,
     })
 
     total_agents += len(positions)
@@ -117,6 +117,7 @@ for group in agent_groups:
         label=f"{group['group_id']} agents",
     )
 
+    ''' 
     if group["mid_zone"] is not None:
         mx, my = group["mid_zone"].exterior.xy
         ax.plot(
@@ -135,7 +136,7 @@ for group in agent_groups:
             marker="x",
             label=f"{group['group_id']} mid points",
         )
-
+    '''
 ax.set_aspect("equal")
 #ax.legend(fontsize=8)
 ax.set_title(SCENARIO["name"])
@@ -151,12 +152,10 @@ simulation = create_simulation(
 total_added = 0
 
 for group in agent_groups:
-    added = add_agents_with_mid_goal(
+    added = add_agents(
         simulation,
         group["positions"],
         group["goal_area"],
-        mid_points=group["mid_points"],
-        mid_distance=1.0,
         speed_min=SCENARIO["speed_min"],
         speed_max=SCENARIO["speed_max"],
     )

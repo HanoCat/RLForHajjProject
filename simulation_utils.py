@@ -147,7 +147,11 @@ def add_agents(simulation, positions, goal_area, speed_min=1.0, speed_max=1.4):
                     position=pos,
                     desired_speed=random.uniform(speed_min, speed_max),
                     radius=0.12,
+                    #time_gap = 0.8,
+                    range_neighbor_repulsion = 0.5,
+                    #strength_neighbor_repulsion = 1.0.imag,
                 )
+
             )
             added += 1
 

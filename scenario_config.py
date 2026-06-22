@@ -2,7 +2,7 @@ SCENARIO = {
     "name": "four_zones_precise_test",
     "env_json": "processed_environment.json",
     "trajectory_file": "four_zones_test.sqlite",
-    "html_file": "four_zones_test.html",
+    "html_file": "spread_agents.html",
     "max_iterations": 3000,
     "every_nth_frame_n": 100,
     "min_agent_distance": 0.4,
