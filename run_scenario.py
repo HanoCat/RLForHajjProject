@@ -1,8 +1,8 @@
 
-
 import matplotlib.pyplot as plt
 
 from scenario_config import SCENARIO
+from barrier_control import apply_barrier_actions
 from simulation_utils import (
     load_environment,
     make_zone_from_fraction,
@@ -16,6 +16,15 @@ from simulation_utils import (
 
 
 geometry, env = load_environment(SCENARIO["env_json"])
+
+# Apply dynamic movable-barrier orientation before creating zones and simulation.
+# For RL integration later, replace SCENARIO["barrier_actions"] with the action output.
+print("Barrier actions:", SCENARIO["barrier_actions"])
+
+geometry = apply_barrier_actions(
+    env,
+    SCENARIO["barrier_actions"],
+)
 
 agent_groups = []
 total_agents = 0

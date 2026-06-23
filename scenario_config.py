@@ -3,12 +3,33 @@ SCENARIO = {
     "env_json": "processed_environment.json",
     "trajectory_file": "four_zones_test.sqlite",
     "html_file": "spread_agents.html",
-    "max_iterations": 3000,
+    "max_iterations": 1,
     "every_nth_frame_n": 100,
     "min_agent_distance": 0.4,
     "safe_distance": 0.2,
     "speed_min": 1.0,
     "speed_max": 1.4,
+
+    # Movable barrier control. Values are degrees relative to the original JSON orientation.
+    # Later, RL can replace this dict at the start of each episode.
+    "movable_barrier_ids": [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 2301, 2302],
+
+    "barrier_actions": {
+        12: 20,
+        13: 20,
+        14: 20,
+        15: 20,
+        16: 20,
+        17: 20,
+        18: 20,
+        19: 20,
+        20: 20,
+        21: 20,
+        22: 20,
+        24: 20,
+        2301: 0,
+        2302: 80,
+    },
 
     "agent_groups": [
         {
