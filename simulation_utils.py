@@ -3,12 +3,44 @@ import os
 import pathlib
 import random
 
+import math
+
 import jupedsim as jps
 from shapely import wkt
 from shapely.geometry import Point, box, Polygon, MultiPolygon
 from shapely.validation import make_valid
 from jupedsim.internal.notebook_utils import animate, read_sqlite_file
 
+
+def load_p2pnet_points(points_file, geometry, min_score=0.0, max_agents=None):
+    with open(points_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    scale = 0.05
+    image_height_px = 780
+
+    positions = []
+
+    for agent in data["agents"]:
+        if float(agent.get("score", 1.0)) < min_score:
+            continue
+
+        x_px = float(agent["x"])
+        y_px = float(agent["y"])
+
+        pos = (
+            x_px * scale,
+            (image_height_px - y_px) * scale,
+        )
+
+        if geometry.covers(Point(pos)):
+            positions.append(pos)
+
+        if max_agents is not None and len(positions) >= max_agents:
+            break
+
+    print(f"P2PNet agents loaded: {len(positions)}")
+    return positions
 
 def largest_polygon(geom):
     if isinstance(geom, Polygon):
@@ -233,3 +265,41 @@ def save_animation(every_nth_frame_n, trajectory_file, html_file, title="Simulat
     )
 
     fig.write_html(html_file)
+
+def clamp(value, low, high):
+    return max(min(value, high), low)
+
+def interp_angle(a0, a1, s):
+    delta = ((a1 - a0 + 180) % 360) - 180
+    return a0 + s * delta
+
+def interp_angle_bounded(closed_angle, open_angle, s, max_angle_delta=90):
+    raw_delta = open_angle - closed_angle
+
+    # keep direction, but prevent huge sweeping rotations
+    bounded_delta = clamp(raw_delta, -max_angle_delta, max_angle_delta)
+
+    angle = closed_angle + s * bounded_delta
+
+    low = min(closed_angle, open_angle)
+    high = max(closed_angle, open_angle)
+
+    return clamp(angle, low, high)
+
+def interp_dimension(closed_value, open_value, s):
+    low = min(closed_value, open_value)
+    high = max(closed_value, open_value)
+
+    value = closed_value + s * (open_value - closed_value)
+
+    return clamp(value, low, high)
+
+
+def interp_pose(closed, open_, s):
+    s = clamp(float(s), 0.0, 1.0)
+
+    return {
+        "dx": interp_dimension(closed["dx"], open_["dx"], s),
+        "dy": interp_dimension(closed["dy"], open_["dy"], s),
+        "angle": interp_angle(closed["angle"], open_["angle"], s),
+    }

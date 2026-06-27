@@ -7,6 +7,100 @@ from shapely.affinity import rotate
 from shapely.geometry import Polygon, MultiPolygon
 from shapely.ops import unary_union
 from shapely.validation import make_valid
+from shapely.affinity import rotate, translate
+from simulation_utils import interp_pose
+
+def apply_pose(poly, pose, *, origin="centroid", clean_tolerance=0.002):
+    rotated = rotate(
+        poly,
+        pose["angle"],
+        origin=origin,
+        use_radians=False,
+    )
+
+    moved = translate(
+        rotated,
+        xoff=pose["dx"],
+        yoff=pose["dy"],
+    )
+
+    return clean_geom(moved, tolerance=clean_tolerance)
+
+def build_barriers_from_pair_states(
+    env,
+    pair_states,
+    barrier_pairs,
+    pose_config,
+    *,
+    origin="centroid",
+    clean_tolerance=0.002,
+):
+    barriers = get_movable_barriers(env)
+    moved_barriers = {}
+
+    for pair_name, barrier_ids in barrier_pairs.items():
+        s = float(pair_states.get(pair_name, 0.0))
+        s = max(0.0, min(1.0, s))
+
+        for bid in barrier_ids:
+            bid = int(bid)
+
+            pose = interp_pose(
+                pose_config[bid]["closed"],
+                pose_config[bid]["open"],
+                s,
+            )
+
+            moved_barriers[bid] = apply_pose(
+                barriers[bid],
+                pose,
+                origin=origin,
+                clean_tolerance=clean_tolerance,
+            )
+
+    return moved_barriers
+
+def apply_barrier_pair_states(
+    env,
+    pair_states,
+    barrier_pairs,
+    pose_config,
+    *,
+    origin="centroid",
+    clean_tolerance=0.002,
+    keep_largest=True,
+):
+    connected = load_layer(env, "connected_geometry")
+    original_movable = load_layer(env, "movable_barriers")
+
+    moved_barriers = unary_union(
+        list(
+            build_barriers_from_pair_states(
+                env,
+                pair_states,
+                barrier_pairs,
+                pose_config,
+                origin=origin,
+                clean_tolerance=clean_tolerance,
+            ).values()
+        )
+    )
+
+    geometry = connected.union(original_movable)
+    geometry = clean_geom(geometry, tolerance=clean_tolerance)
+
+    geometry = geometry.difference(moved_barriers)
+    geometry = clean_geom(geometry, tolerance=clean_tolerance)
+
+    if keep_largest:
+        geometry = largest_polygon(geometry)
+
+    if not isinstance(geometry, Polygon):
+        raise RuntimeError(
+            f"Final geometry is {geometry.geom_type}, but JuPedSim needs one Polygon."
+        )
+
+    return geometry
 
 
 def clean_geom(geom, tolerance: float = 0.0):
@@ -163,6 +257,8 @@ def apply_barrier_actions(
         )
 
     return geometry
+
+
 def barrier_action_vector_to_dict(
     action_vector: Iterable[float],
     barrier_ids: Iterable[int],

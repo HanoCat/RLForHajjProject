@@ -11,8 +11,8 @@ from jupedsim.internal.notebook_utils import animate, read_sqlite_file
 
 
 ENV_JSON = "processed_environment.json"
-TRAJECTORY_FILE = "whole_scene_test.sqlite"
-HTML_FILE = "whole_scene_animation.html"
+TRAJECTORY_FILE = "draft_html/whole_scene_test.sqlite"
+HTML_FILE = "draft_html/whole_scene_animation.html"
 
 N_AGENTS = 5
 MAX_ITERATIONS = 1000

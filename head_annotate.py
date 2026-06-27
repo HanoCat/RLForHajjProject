@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-IMAGE_PATH = "clean_frame.png"
+IMAGE_PATH = "CrowdCounting-P2PNet/clean_frame.png"
 SCENE_JSON = "scene_coordinates_with_crowd.json"
 P2PNET_JSON = "p2pnet_points.json"
 OUTPUT_JSON = "hybrid_agents_p2pnet.json"

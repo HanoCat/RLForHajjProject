@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from matplotlib.patches import Polygon
 
-IMAGE_PATH = "clean_seg1.png"
+IMAGE_PATH = "../CrowdCounting-P2PNet/clean_seg1.png"
 JSON_PATH = "scene_coordinates.json"
 
 img = Image.open(IMAGE_PATH)

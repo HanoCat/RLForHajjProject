@@ -8,7 +8,7 @@ from shapely.validation import make_valid
 
 from barrier_control import get_movable_barriers
 
-with open("processed_environment.json", "r", encoding="utf-8") as f:
+with open("../processed_environment.json", "r", encoding="utf-8") as f:
     env = json.load(f)
 
 geometry = make_valid(wkt.loads(env["geometry_wkt"]["connected_geometry"]))

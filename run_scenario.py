@@ -2,12 +2,14 @@
 import matplotlib.pyplot as plt
 
 from scenario_config import SCENARIO
-from barrier_control import apply_barrier_actions
+from barrier_control import apply_barrier_pair_states
+from shapely.geometry import Point
 from simulation_utils import (
     load_environment,
     make_zone_from_fraction,
     make_convex_goal_from_zone,
     random_points,
+    load_p2pnet_points,
     create_simulation,
     add_agents,
     run_simulation,
@@ -19,15 +21,32 @@ geometry, env = load_environment(SCENARIO["env_json"])
 
 # Apply dynamic movable-barrier orientation before creating zones and simulation.
 # For RL integration later, replace SCENARIO["barrier_actions"] with the action output.
-print("Barrier actions:", SCENARIO["barrier_actions"])
 
-geometry = apply_barrier_actions(
+print("Barrier pair states:", SCENARIO["barrier_pair_states"])
+
+geometry = apply_barrier_pair_states(
     env,
-    SCENARIO["barrier_actions"],
+    SCENARIO["barrier_pair_states"],
+    SCENARIO["barrier_pairs"],
+    SCENARIO["barrier_pose_config"],
 )
 
 agent_groups = []
 total_agents = 0
+
+p2pnet_positions = []
+
+if "p2pnet_points_file" in SCENARIO:
+        p2pnet_positions = load_p2pnet_points(
+            SCENARIO["p2pnet_points_file"],
+            geometry,
+            min_score=SCENARIO.get("p2pnet_min_score", 0.0),
+            max_agents=SCENARIO.get("p2pnet_max_agents"),
+        )
+        print("Has p2pnet key:", "p2pnet_points_file" in SCENARIO)
+        print("P2PNet loaded before grouping:", len(p2pnet_positions))
+
+
 
 for group in SCENARIO["agent_groups"]:
     start_zone = make_zone_from_fraction(
@@ -48,11 +67,20 @@ for group in SCENARIO["agent_groups"]:
         safe_distance=SCENARIO["safe_distance"],
     )
 
-    positions = random_points(
+    random_positions = random_points(
         start_zone,
         group["count"],
         min_distance=SCENARIO["min_agent_distance"],
     )
+
+    p2pnet_group_positions = [
+        pos for pos in p2pnet_positions
+        if start_zone.covers(Point(pos))
+    ]
+    print(group["group_id"], "matched p2pnet:", len(p2pnet_group_positions))
+
+    positions = random_positions + p2pnet_group_positions
+
 
     ''' 
     mid_zone = None
@@ -82,6 +110,8 @@ for group in SCENARIO["agent_groups"]:
 
     total_agents += len(positions)
 
+print("Geometry bounds:", geometry.bounds)
+print("First p2pnet point:", p2pnet_positions[0] if p2pnet_positions else None)
 
 print("Scenario:", SCENARIO["name"])
 print("Geometry area:", round(geometry.area, 2))
