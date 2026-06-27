@@ -12,7 +12,7 @@ from jupedsim.internal.notebook_utils import animate, read_sqlite_file
 
 
 SCENE_JSON = "scene_coordinates.json"
-TRAJECTORY_FILE = "draft_html/scene_test.sqlite"
+TRAJECTORY_FILE = "../draft_html/scene_test.sqlite"
 
 SCALE = 0.05
 BARRIER_WIDTH_M = 0.30

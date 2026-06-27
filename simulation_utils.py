@@ -10,6 +10,7 @@ from shapely import wkt
 from shapely.geometry import Point, box, Polygon, MultiPolygon
 from shapely.validation import make_valid
 from jupedsim.internal.notebook_utils import animate, read_sqlite_file
+import matplotlib.pyplot as plt
 
 
 def load_p2pnet_points(points_file, geometry, min_score=0.0, max_agents=None):
@@ -39,7 +40,7 @@ def load_p2pnet_points(points_file, geometry, min_score=0.0, max_agents=None):
         if max_agents is not None and len(positions) >= max_agents:
             break
 
-    print(f"P2PNet agents loaded: {len(positions)}")
+    #print(f"P2PNet agents loaded: {len(positions)}")
     return positions
 
 def largest_polygon(geom):
@@ -188,7 +189,8 @@ def add_agents(simulation, positions, goal_area, speed_min=1.0, speed_max=1.4):
             added += 1
 
         except RuntimeError as e:
-            print(f"Skipped agent {agent_id} at {pos}: {e}")
+            continue
+            #print(f"Skipped agent {agent_id} at {pos}: {e}")
 
     return added
 
@@ -236,7 +238,8 @@ def add_agents_with_mid_goal(
             added += 1
 
         except RuntimeError as e:
-            print(f"Skipped agent {agent_id} at {pos}: {e}")
+            continue
+            #print(f"Skipped agent {agent_id} at {pos}: {e}")
 
     return added
 def run_simulation(simulation, max_iterations):
@@ -303,3 +306,59 @@ def interp_pose(closed, open_, s):
         "dy": interp_dimension(closed["dy"], open_["dy"], s),
         "angle": interp_angle(closed["angle"], open_["angle"], s),
     }
+
+
+def plot_zones_agents(geometry, agent_groups, SCENARIO):
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    x, y = geometry.exterior.xy
+    ax.fill(x, y, alpha=0.20, label="environment")
+
+    for group in agent_groups:
+        sx, sy = group["start_zone"].exterior.xy
+        ax.plot(sx, sy, linewidth=2, label=f"{group['group_id']} start")
+
+        gzx, gzy = group["goal_zone"].exterior.xy
+        ax.plot(
+            gzx,
+            gzy,
+            linewidth=2,
+            linestyle="--",
+            label=f"{group['group_id']} goal zone",
+        )
+
+        gx, gy = group["goal_area"].exterior.xy
+        ax.fill(gx, gy, alpha=0.5)
+
+        positions = group["positions"]
+        ax.scatter(
+            [p[0] for p in positions],
+            [p[1] for p in positions],
+            s=18,
+            label=f"{group['group_id']} agents",
+        )
+
+        ''' 
+        if group["mid_zone"] is not None:
+            mx, my = group["mid_zone"].exterior.xy
+            ax.plot(
+                mx,
+                my,
+                linewidth=2,
+                linestyle=":",
+                label=f"{group['group_id']} mid zone",
+            )
+
+            mid_points = group["mid_points"]
+            ax.scatter(
+                [p[0] for p in mid_points],
+                [p[1] for p in mid_points],
+                s=12,
+                marker="x",
+                label=f"{group['group_id']} mid points",
+            )
+        '''
+    ax.set_aspect("equal")
+    # ax.legend(fontsize=8)
+    ax.set_title(SCENARIO["name"])
+    plt.show()

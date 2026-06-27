@@ -1,6 +1,7 @@
 SCENARIO = {
+
+    # scenario settings
     "name": "four_zones_precise_test",
-    "env_json": "processed_environment.json",
     "trajectory_file": "four_zones_test.sqlite",
     "html_file": "add_real_agents.html",
     "max_iterations": 500,
@@ -10,12 +11,15 @@ SCENARIO = {
     "speed_min": 1.0,
     "speed_max": 1.4,
 
-    "p2pnet_points_file": "p2pnet_points.json",
-    "p2pnet_min_score": 0.5,
-    "p2pnet_max_agents": None,
+    # SAC
+    "num_episodes": 1,
+    "num_steps": 1,
 
-    # Movable barrier control. Values are degrees relative to the original JSON orientation.
-    # Later, RL can replace this dict at the start of each episode.
+
+    # load file of built env
+    "env_json": "processed_environment.json",
+
+    ### Movable barrier ###
     "movable_barrier_ids": [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 2301, 2302],
 
     "barrier_pairs": {
@@ -61,6 +65,14 @@ SCENARIO = {
     "pair_7": 1.0,
     },
 
+
+    ### Agents Initialization ###
+    # load agents from the head detection of the scene
+    "p2pnet_points_file": "p2pnet_points.json",
+    "p2pnet_min_score": 0.5,
+    "p2pnet_max_agents": None,
+
+    # add more synthetic agents randomly based on the different zones in the scene
     "agent_groups": [
         {
             "group_id": "ZONE1_1",
@@ -172,4 +184,6 @@ SCENARIO = {
             "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
         },
     ],
+
+
 }

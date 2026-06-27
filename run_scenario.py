@@ -14,15 +14,11 @@ from simulation_utils import (
     add_agents,
     run_simulation,
     save_animation,
+    plot_zones_agents,
 )
 
 
-geometry, env = load_environment(SCENARIO["env_json"])
-
-# Apply dynamic movable-barrier orientation before creating zones and simulation.
-# For RL integration later, replace SCENARIO["barrier_actions"] with the action output.
-
-print("Barrier pair states:", SCENARIO["barrier_pair_states"])
+_, env = load_environment(SCENARIO["env_json"])
 
 geometry = apply_barrier_pair_states(
     env,
@@ -43,8 +39,8 @@ if "p2pnet_points_file" in SCENARIO:
             min_score=SCENARIO.get("p2pnet_min_score", 0.0),
             max_agents=SCENARIO.get("p2pnet_max_agents"),
         )
-        print("Has p2pnet key:", "p2pnet_points_file" in SCENARIO)
-        print("P2PNet loaded before grouping:", len(p2pnet_positions))
+        #print("Has p2pnet key:", "p2pnet_points_file" in SCENARIO)
+        #print("P2PNet loaded before grouping:", len(p2pnet_positions))
 
 
 
@@ -77,7 +73,7 @@ for group in SCENARIO["agent_groups"]:
         pos for pos in p2pnet_positions
         if start_zone.covers(Point(pos))
     ]
-    print(group["group_id"], "matched p2pnet:", len(p2pnet_group_positions))
+    #print(group["group_id"], "matched p2pnet:", len(p2pnet_group_positions))
 
     positions = random_positions + p2pnet_group_positions
 
@@ -110,77 +106,25 @@ for group in SCENARIO["agent_groups"]:
 
     total_agents += len(positions)
 
-print("Geometry bounds:", geometry.bounds)
-print("First p2pnet point:", p2pnet_positions[0] if p2pnet_positions else None)
+#print("Geometry bounds:", geometry.bounds)
+#print("First p2pnet point:", p2pnet_positions[0] if p2pnet_positions else None)
 
-print("Scenario:", SCENARIO["name"])
-print("Geometry area:", round(geometry.area, 2))
-print("Groups:", len(agent_groups))
-print("Total agents:", total_agents)
+#print("Scenario:", SCENARIO["name"])
+#print("Geometry area:", round(geometry.area, 2))
+#print("Groups:", len(agent_groups))
+#print("Total agents:", total_agents)
 
-for group in agent_groups:
-    print(
-        group["group_id"],
-        "| agents:", len(group["positions"]),
-        "| start area:", round(group["start_zone"].area, 2),
-        "| goal area:", round(group["goal_area"].area, 2),
-    )
+#for group in agent_groups:
+  #  print(
+   #     group["group_id"],
+    #    "| agents:", len(group["positions"]),
+    #    "| start area:", round(group["start_zone"].area, 2),
+    #    "| goal area:", round(group["goal_area"].area, 2),
+   # )
 
 
-fig, ax = plt.subplots(figsize=(14, 7))
 
-x, y = geometry.exterior.xy
-ax.fill(x, y, alpha=0.20, label="environment")
-
-for group in agent_groups:
-    sx, sy = group["start_zone"].exterior.xy
-    ax.plot(sx, sy, linewidth=2, label=f"{group['group_id']} start")
-
-    gzx, gzy = group["goal_zone"].exterior.xy
-    ax.plot(
-        gzx,
-        gzy,
-        linewidth=2,
-        linestyle="--",
-        label=f"{group['group_id']} goal zone",
-    )
-
-    gx, gy = group["goal_area"].exterior.xy
-    ax.fill(gx, gy, alpha=0.5)
-
-    positions = group["positions"]
-    ax.scatter(
-        [p[0] for p in positions],
-        [p[1] for p in positions],
-        s=18,
-        label=f"{group['group_id']} agents",
-    )
-
-    ''' 
-    if group["mid_zone"] is not None:
-        mx, my = group["mid_zone"].exterior.xy
-        ax.plot(
-            mx,
-            my,
-            linewidth=2,
-            linestyle=":",
-            label=f"{group['group_id']} mid zone",
-        )
-
-        mid_points = group["mid_points"]
-        ax.scatter(
-            [p[0] for p in mid_points],
-            [p[1] for p in mid_points],
-            s=12,
-            marker="x",
-            label=f"{group['group_id']} mid points",
-        )
-    '''
-ax.set_aspect("equal")
-#ax.legend(fontsize=8)
-ax.set_title(SCENARIO["name"])
-plt.show()
-
+plot_zones_agents(geometry, agent_groups, SCENARIO)
 
 simulation = create_simulation(
     geometry,
