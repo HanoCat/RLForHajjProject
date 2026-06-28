@@ -148,20 +148,23 @@ def random_points(poly, n, min_distance=0.7):
 
     return points
 
+def create_simulation(geometry, trajectory_file, simulation_pram):
+    kwargs = {
+        "model": jps.CollisionFreeSpeedModelV2(),
+        "geometry": geometry,
+        "dt": simulation_pram["dt"],
+    }
 
-def create_simulation(geometry, trajectory_file, dt=0.05):
-    if os.path.exists(trajectory_file):
-        os.remove(trajectory_file)
+    if simulation_pram.get("write_trajectory", False):
+        if os.path.exists(trajectory_file):
+            os.remove(trajectory_file)
 
-    return jps.Simulation(
-        model=jps.CollisionFreeSpeedModelV2(),
-        geometry=geometry,
-        dt=dt,
-        trajectory_writer=jps.SqliteTrajectoryWriter(
+        kwargs["trajectory_writer"] = jps.SqliteTrajectoryWriter(
             output_file=pathlib.Path(trajectory_file),
-            every_nth_frame=5,
-        ),
-    )
+            every_nth_frame=simulation_pram["every_nth_frame"],
+        )
+
+    return jps.Simulation(**kwargs)
 
 
 def add_agents(simulation, positions, goal_area, speed_min=1.0, speed_max=1.4):
@@ -243,17 +246,27 @@ def add_agents_with_mid_goal(
 
     return added
 def run_simulation(simulation, max_iterations):
+    max_agents = simulation.agent_count()
+    min_agents = simulation.agent_count()
+
     while simulation.agent_count() > 0 and simulation.iteration_count() < max_iterations:
         simulation.iterate()
 
-    simulation._writer.close()
+        current_agents = simulation.agent_count()
+        max_agents = max(max_agents, current_agents)
+        min_agents = min(min_agents, current_agents)
+
+    writer = getattr(simulation, "_writer", None)
+    if writer is not None:
+        writer.close()
 
     return {
         "elapsed_time": simulation.elapsed_time(),
         "remaining_agents": simulation.agent_count(),
         "iterations": simulation.iteration_count(),
+        "initial_agents": max_agents,
+        "min_agents": min_agents,
     }
-
 
 def save_animation(every_nth_frame_n, trajectory_file, html_file, title="Simulation"):
     trajectories, walkable_area = read_sqlite_file(trajectory_file)

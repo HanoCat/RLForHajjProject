@@ -6,122 +6,14 @@ from shapely.geometry import Point
 from scenario_config import SCENARIO
 from barrier_control import apply_barrier_pair_states
 from simulation_utils import *
-
-
-def create_geometry(env, barrier_pair_states):
-    return apply_barrier_pair_states(
-        env,
-        barrier_pair_states,
-        SCENARIO["barrier_pairs"],
-        SCENARIO["barrier_pose_config"],
-    )
-
-
-def load_agents(base_geometry):
-    agent_groups = []
-    total_agents = 0
-    p2pnet_positions = []
-
-    if "p2pnet_points_file" in SCENARIO:
-        p2pnet_positions = load_p2pnet_points(
-            SCENARIO["p2pnet_points_file"],
-            base_geometry,
-            min_score=SCENARIO.get("p2pnet_min_score", 0.0),
-            max_agents=SCENARIO.get("p2pnet_max_agents"),
-        )
-
-    with tqdm(total=len(SCENARIO["agent_groups"]), desc="Loading groups") as pbar:
-        for group in SCENARIO["agent_groups"]:
-            start_zone = make_zone_from_fraction(
-                base_geometry,
-                group["start_box_frac"],
-                safe_distance=SCENARIO["safe_distance"],
-            )
-
-            goal_zone = make_zone_from_fraction(
-                base_geometry,
-                group["goal_box_frac"],
-                safe_distance=SCENARIO["safe_distance"],
-            )
-
-            goal_area = make_convex_goal_from_zone(
-                goal_zone,
-                size=0.4,
-                safe_distance=SCENARIO["safe_distance"],
-            )
-
-            random_positions = random_points(
-                start_zone,
-                group["count"],
-                min_distance=SCENARIO["min_agent_distance"],
-            )
-
-            p2pnet_group_positions = [
-                pos for pos in p2pnet_positions
-                if start_zone.covers(Point(pos))
-            ]
-
-            positions = random_positions + p2pnet_group_positions
-
-            agent_groups.append({
-                "group_id": group["group_id"],
-                "positions": positions,
-                "goal_area": goal_area,
-            })
-
-            total_agents += len(positions)
-
-            pbar.set_postfix(
-                total_agents=total_agents,
-                group_agents=len(positions),
-            )
-            pbar.update(1)
-
-    print(f"Total candidate agents loaded once: {total_agents}")
-    return agent_groups
-
-
-def is_position_valid(position, geometry):
-    point = Point(position)
-
-    if hasattr(geometry, "walkable_area"):
-        return geometry.walkable_area.covers(point)
-
-    if hasattr(geometry, "walkable_areas"):
-        return any(area.covers(point) for area in geometry.walkable_areas)
-
-    return True
-
-
-def add_valid_agents_to_simulation(simulation, agent_groups, geometry):
-    total_added = 0
-    total_skipped = 0
-
-    for group in agent_groups:
-        valid_positions = [
-            pos for pos in group["positions"]
-            if is_position_valid(pos, geometry)
-        ]
-
-        skipped = len(group["positions"]) - len(valid_positions)
-
-        if valid_positions:
-            add_agents(
-                simulation,
-                valid_positions,
-                group["goal_area"],
-                speed_min=SCENARIO["speed_min"],
-                speed_max=SCENARIO["speed_max"],
-            )
-
-        total_added += len(valid_positions)
-        total_skipped += skipped
-
-    return total_added, total_skipped
+import random
+from sac_agent import SACAgent, ReplayBuffer
+import numpy as np
+import pickle
+from RL_utils import *
 
 
 def train_RL():
-    num_episodes = 1
 
     env_json = SCENARIO["env_json"]
     _, env = load_environment(env_json)
@@ -135,47 +27,100 @@ def train_RL():
 
     agent_groups = load_agents(base_geometry)
 
+    if SCENARIO["training"]:
+        simulation_pram = SCENARIO["simulation_mode_training"]
+    else:
+        simulation_pram = SCENARIO["simulation_mode_vis"]
+
+    policy = SACAgent(state_dim=11, action_dim=7)
+    replay_buffer = ReplayBuffer(max_size=100000)
+    history = []
+
+    print('Start Training Episodes ....')
+
     for episode in trange(SCENARIO["num_episodes"], desc="Training episodes"):
+
+        case = reset_training_case(episode)
+
+        num_agents = case["num_agents"]
+        state = case["state"]
+        initial_barrier_states = case["initial_barrier_states"]
+        stage_name = case["stage_name"]
+        print('initial_barrier_states: ', initial_barrier_states)
+
+        episode_reward = 0.0
 
         for step in range(SCENARIO["num_steps"]):
 
-            # Later, your RL action will update this variable.
-            barrier_pair_states = SCENARIO["barrier_pair_states"]
+            if episode < SCENARIO["start_random_episodes"]:
+                action = np.random.uniform(0.0, 1.0, size=7)
+            else:
+                action = policy.select_action(state, evaluate=False)
+
+            barrier_pair_states = action_to_barrier_pair_states(action)
+            print("Action states:", {k: round(v, 2) for k, v in barrier_pair_states.items()})
 
             geometry = create_geometry(
                 env,
                 barrier_pair_states,
             )
 
-            root, ext = os.path.splitext(SCENARIO["trajectory_file"])
-            trajectory_file = f"{root}_episode_{episode + 1}{ext}"
+            trajectory_file = None
+            if simulation_pram.get("write_trajectory", False):
+                root, ext = os.path.splitext(SCENARIO["trajectory_file"])
+                trajectory_file = f"{root}_episode_{episode + 1}_step_{step + 1}{ext}"
 
             simulation = create_simulation(
                 geometry,
                 trajectory_file,
-                dt=0.05,
+                simulation_pram,
+            )
+
+            episode_agent_groups = select_agent_subset(
+                agent_groups,
+                max_agents=num_agents,
+                shuffle=simulation_pram["shuffle_agents_each_episode"],
             )
 
             total_added, total_skipped = add_valid_agents_to_simulation(
                 simulation,
-                agent_groups,
+                episode_agent_groups,
                 geometry,
             )
-
-            #print(f"Agents added: {total_added}")
-            #print(f"Agents skipped this episode: {total_skipped}")
-
 
             result = run_simulation(
                 simulation,
                 SCENARIO["max_iterations"],
             )
 
-            print("Result:", result)
+            reward = compute_reward(result, debug=True)
+            episode_reward += reward
 
-            if num_episodes == 1:
+            next_state = build_state(
+                num_agents=num_agents,
+                barrier_pair_states=barrier_pair_states,
+            )
+
+            done = 1.0
+
+            replay_buffer.add(state, action, reward, next_state, done)
+
+            losses = policy.train(
+                replay_buffer,
+                batch_size=SCENARIO["batch_size_rl"],
+            )
+
+            print(
+                f"Episode={episode}, stage={stage_name}, agents={num_agents}, "
+                f"added={total_added}, skipped={total_skipped}, "
+                f"reward={reward:.3f}, action={np.round(action, 2)}, losses={losses}"
+            )
+
+            state = next_state
+
+            if simulation_pram.get("save_animation", False) and simulation_pram.get("write_trajectory", False):
                 save_animation(
-                    SCENARIO["every_nth_frame_n"],
+                    simulation_pram["every_nth_frame"],
                     trajectory_file,
                     SCENARIO["html_file"],
                     title=SCENARIO["name"],
@@ -183,10 +128,50 @@ def train_RL():
 
                 print("Animation saved:", SCENARIO["html_file"])
 
+        should_save_stage = (episode + 1) % SCENARIO["save_every_episodes"] == 0
+        should_save_best = episode_reward >= SCENARIO["best_reward_threshold"]
+
+        if should_save_stage or should_save_best or ((episode + 1) % SCENARIO["eval_freq_rl"] == 0):
+            save_policy_checkpoint(
+                policy=policy,
+                episode=episode,
+                reward=episode_reward,
+                stage_name=stage_name,
+            )
+
+        history.append({
+            "episode": episode,
+            "stage": stage_name,
+            "num_agents": num_agents,
+            "added_agents": total_added,
+            "skipped_agents": total_skipped,
+            "reward": episode_reward,
+            "remaining_agents": result["remaining_agents"],
+            "iterations": result["iterations"],
+            "elapsed_time": result["elapsed_time"],
+            "actor_loss": None if losses is None else losses["actor_loss"],
+            "critic_1_loss": None if losses is None else losses["critic_1_loss"],
+            "critic_2_loss": None if losses is None else losses["critic_2_loss"],
+            "pair_1_action": action[0],
+            "pair_2_action": action[1],
+            "pair_3_action": action[2],
+            "pair_4_action": action[3],
+            "pair_5_action": action[4],
+            "pair_6_action": action[5],
+            "pair_7_action": action[6],
+        })
+
+    save_training_plots(history)
+
+
+
+
 
 def main(argv):
     train_RL()
 
 
+
 if __name__ == "__main__":
     app.run(main)
+

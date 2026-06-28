@@ -1,19 +1,51 @@
 SCENARIO = {
 
-    # scenario settings
+
+    # simulation scenario settings
     "name": "four_zones_precise_test",
     "trajectory_file": "four_zones_test.sqlite",
     "html_file": "add_real_agents.html",
-    "max_iterations": 500,
-    "every_nth_frame_n": 80,
+    "max_iterations": 100, # time stop for the simulation.
+
     "min_agent_distance": 0.4,
     "safe_distance": 0.2,
     "speed_min": 1.0,
     "speed_max": 1.4,
 
-    # SAC
-    "num_episodes": 1,
+    # SAC train
+    "num_episodes": 12,
     "num_steps": 1,
+    "start_random_episodes": 2,
+    "batch_size_rl": 4,
+    "eval_freq_rl": 500,
+    "save_every_episodes": 4,
+    "best_reward_threshold": 0.85,
+
+
+    "training": True,
+
+    "simulation_mode_training": {
+        "dt": 0.05,
+        "training_num_agents": 100,   # use None for all agents
+        "shuffle_agents_each_episode": True,
+        "every_nth_frame": 20,
+
+
+        "write_trajectory": False,
+        "save_animation": False,
+    },
+
+    "simulation_mode_vis": {
+        "dt": 0.05,
+        "training_num_agents": None,
+        "shuffle_agents_each_episode": True,
+        "every_nth_frame": 5,
+
+
+        "write_trajectory": True,
+        "save_animation": True,
+    },
+
 
 
     # load file of built env
