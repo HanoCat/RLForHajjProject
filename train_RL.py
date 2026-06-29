@@ -165,12 +165,20 @@ def train_RL():
             "skipped_agents": total_skipped,
             "reward": episode_reward,
 
+            "speed_loss": reward_metrics["speed_loss"],
+            "mean_speed": reward_metrics["mean_speed"],
+            "min_speed": reward_metrics["min_speed"],
+            "speed_05": reward_metrics["speed_05"],
+            "speed_10": reward_metrics["speed_10"],
+            "stopped_ratio": reward_metrics["stopped_ratio"],
+
             "evacuation_ratio": reward_metrics["evacuation_ratio"],
             "throughput_agents_per_second": reward_metrics["throughput_agents_per_second"],
             "mean_density": reward_metrics["voronoi_mean_density"],
             "max_density": reward_metrics["voronoi_95_density"],
             "general_mean_density": reward_metrics["general_mean_density"],
             "general_max_density": reward_metrics["general_max_density"],
+
 
             "remaining_agents": result["remaining_agents"],
             "iterations": result["iterations"],

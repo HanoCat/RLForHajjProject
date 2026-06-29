@@ -454,12 +454,14 @@ def compute_reward(
         "raw_reward": raw_reward,
         "raw_cost": raw_cost,
         "normalized_cost": normalized_cost,
+
         "speed_loss": speed_loss,
         "mean_speed": mean_speed,
         "min_speed": min_speed,
         "speed_05": speed_05,
         "speed_10": speed_10,
         "stopped_ratio": stopped_ratio,
+
         "evacuation_ratio": evacuation_ratio,
         "throughput_agents_per_second": throughput_agents_per_second,
         "classic_mean_density": classic_mean_density,
