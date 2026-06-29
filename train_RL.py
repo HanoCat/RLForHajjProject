@@ -41,11 +41,14 @@ def train_RL():
     for episode in trange(SCENARIO["num_episodes"], desc="Training episodes"):
 
         case = reset_training_case(episode)
-        epsilon = get_stage_epsilon(
-            episode=episode,
-            stage_start_episode=case["stage_start"],
-            stage_length=case["stage_length"],
-        )
+        if "fixed_epsilon" in case:
+            epsilon = case["fixed_epsilon"]
+        else:
+            epsilon = get_stage_epsilon(
+                episode=episode,
+                stage_start_episode=case["stage_start"],
+                stage_length=case["stage_length"],
+            )
 
         num_agents = case["num_agents"]
         state = case["state"]
@@ -111,7 +114,13 @@ def train_RL():
                 SCENARIO["max_iterations"],
             )
 
-            reward = compute_reward(result, debug=True)
+            reward, reward_metrics = compute_reward(
+                result,
+                trajectory_file=trajectory_file,
+                geometry=geometry,
+                debug=True,
+            )
+
             episode_reward += reward
 
             next_state = build_state(
@@ -148,15 +157,6 @@ def train_RL():
 
         should_save_stage = (episode + 1) % SCENARIO["save_every_episodes"] == 0
         should_save_best = episode_reward >= SCENARIO["best_reward_threshold"]
-
-        if should_save_stage or should_save_best or ((episode + 1) % SCENARIO["eval_freq_rl"] == 0):
-            save_policy_checkpoint(
-                policy=policy,
-                episode=episode,
-                reward=episode_reward,
-                stage_name=stage_name,
-            )
-
         history.append({
             "episode": episode,
             "stage": stage_name,
@@ -164,6 +164,14 @@ def train_RL():
             "added_agents": total_added,
             "skipped_agents": total_skipped,
             "reward": episode_reward,
+
+            "evacuation_ratio": reward_metrics["evacuation_ratio"],
+            "throughput_agents_per_second": reward_metrics["throughput_agents_per_second"],
+            "mean_density": reward_metrics["voronoi_mean_density"],
+            "max_density": reward_metrics["voronoi_95_density"],
+            "general_mean_density": reward_metrics["general_mean_density"],
+            "general_max_density": reward_metrics["general_max_density"],
+
             "remaining_agents": result["remaining_agents"],
             "iterations": result["iterations"],
             "elapsed_time": result["elapsed_time"],
@@ -179,7 +187,16 @@ def train_RL():
             "pair_7_action": action[6],
         })
 
-    save_training_plots(history)
+        if should_save_stage or should_save_best or ((episode + 1) % SCENARIO["eval_freq_rl"] == 0):
+            save_policy_checkpoint(
+                policy=policy,
+                episode=episode,
+                reward=episode_reward,
+                stage_name=stage_name,
+            )
+            save_training_plots(history)
+
+
 
 
 

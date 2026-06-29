@@ -10,6 +10,11 @@ from simulation_utils import *
 import random
 import numpy as np
 import pickle
+import time
+import pedpy
+from shapely.geometry import box
+from jupedsim.internal.notebook_utils import read_sqlite_file
+
 
 
 
@@ -24,14 +29,14 @@ def get_stage_epsilon(
         episode - stage_start_episode
     ) / max(stage_length - 1, 1)
 
+    progress = min(1.0, max(0.0, progress))
+
     epsilon = epsilon_start - (
         epsilon_start - epsilon_end
     ) * progress
 
-    epsilon = max(
-        epsilon_end,
-        epsilon,
-    )
+    epsilon = min(epsilon_start, epsilon)
+    epsilon = max(epsilon_end, epsilon)
 
     return epsilon
 
@@ -278,25 +283,99 @@ def build_state(num_agents, barrier_pair_states):
     )
 
 
-def compute_reward(result, debug=False):
+def make_measurement_area_from_geometry(geometry, margin=0.0):
+    minx, miny, maxx, maxy = geometry.bounds
+
+    area_poly = box(
+        minx + margin,
+        miny + margin,
+        maxx - margin,
+        maxy - margin,
+    )
+
+    return pedpy.MeasurementArea(list(area_poly.exterior.coords))
+
+
+def compute_pedpy_metrics(trajectory_file, geometry):
+    measurement_area = make_measurement_area_from_geometry(geometry)
+
+    traj_data, walkable_area = read_sqlite_file(trajectory_file)
+
+    classic_density = pedpy.compute_classic_density(
+        traj_data=traj_data,
+        measurement_area=measurement_area,
+    )
+
+    individual_voronoi = pedpy.compute_individual_voronoi_polygons(
+        traj_data=traj_data,
+        walkable_area=walkable_area,
+    )
+
+    voronoi_density, intersecting = pedpy.compute_voronoi_density(
+        individual_voronoi_data=individual_voronoi,
+        measurement_area=measurement_area,
+    )
+
+    metrics = {
+        "classic_mean_density": float(classic_density["density"].mean()),
+        "classic_max_density": float(classic_density["density"].max()),
+
+        "voronoi_mean_density": float(voronoi_density["density"].mean()),
+        "voronoi_max_density": float(voronoi_density["density"].max()),
+        "voronoi_95_density": float(voronoi_density["density"].quantile(0.95)),
+    }
+
+    return metrics
+
+def compute_reward(result, trajectory_file=None, geometry=None, debug=False):
     initial = max(result["initial_agents"], 1)
     remaining = result["remaining_agents"]
     evacuated = initial - remaining
+    elapsed = max(result["elapsed_time"], 1e-6)
 
-    remaining_ratio = remaining / initial
-    evacuated_ratio = evacuated / initial
-    time_ratio = result["iterations"] / SCENARIO["max_iterations"]
+    evacuation_ratio = evacuated / initial
+    throughput_agents_per_second = evacuated / elapsed
 
-    reward = evacuated_ratio - 0.1 * time_ratio
+    mean_density = 0.0
+    max_density = 0.0
+
+    if trajectory_file is not None and geometry is not None:
+        pedpy_metrics = compute_pedpy_metrics(
+            trajectory_file=trajectory_file,
+            geometry=geometry,
+        )
+
+        mean_density = pedpy_metrics["voronoi_mean_density"]
+        max_density = pedpy_metrics["voronoi_95_density"]
+        classic_mean_density = pedpy_metrics["classic_mean_density"]
+        classic_max_density = pedpy_metrics["classic_max_density"]
+
+    reward = -(
+            0.5 * mean_density
+            + 1.0 * max_density
+    )
 
     if debug:
         print(
-            f"Reward debug | initial={initial}, remaining={remaining}, "
-            f"evacuated={evacuated}, evacuated_ratio={evacuated_ratio:.3f}, "
-            f"time_ratio={time_ratio:.3f}, reward={reward:.3f}"
+            f"Reward debug | evacuated_ratio={evacuation_ratio:.3f}, "
+            f"throughput={throughput_agents_per_second:.3f}, "
+            f"mean_density={mean_density:.4f}, "
+            f"max_density={max_density:.4f}, "
+            f"reward={reward:.3f}"
         )
 
-    return float(reward)
+    return float(reward), {
+        "evacuation_ratio": evacuation_ratio,
+        "throughput_agents_per_second": throughput_agents_per_second,
+        "general_mean_density": classic_mean_density,
+        "general_max_density": classic_max_density,
+        "voronoi_mean_density": mean_density,
+        "voronoi_95_density": max_density,
+        "classic_mean_density": pedpy_metrics["classic_mean_density"],
+        "classic_max_density": pedpy_metrics["classic_max_density"],
+    }
+
+
 def get_training_stage(episode):
 
     # Rare early exposure to heavy crowd cases
@@ -304,21 +383,22 @@ def get_training_stage(episode):
         if random.random() < SCENARIO["early_heavy_probability"]:
             return {
                 "stage_name": "early_heavy_probe",
-                "num_agents": random.randint(700, 1000),
+                "num_agents": random.randint(500, 800),
                 "randomize": True,
                 "stage_start": episode,
                 "stage_length": 1,
+                "fixed_epsilon": 0.50,
             }
 
     # normal curriculum continues here
     if episode < 3:
-        return {"stage_name": "stage_1_fixed_small", "num_agents": 50, "randomize": False, "stage_start": 0, "stage_length": 50}
+        return {"stage_name": "stage_1_fixed_small", "num_agents": 50, "randomize": False, "stage_start": 0, "stage_length": 3}
     elif episode < 5:
-        return {"stage_name": "stage_2_random_small", "num_agents": random.randint(50, 200), "randomize": True, "stage_start": 50, "stage_length": 100}
+        return {"stage_name": "stage_2_random_small", "num_agents": random.randint(50, 200), "randomize": True, "stage_start": 3, "stage_length": 5}
     elif episode < 7:
-        return {"stage_name": "stage_3_random_medium", "num_agents": random.randint(200, 500), "randomize": True, "stage_start": 150, "stage_length": 150}
+        return {"stage_name": "stage_3_random_medium", "num_agents": random.randint(200, 500), "randomize": True, "stage_start": 5, "stage_length": 7}
     else:
-        return {"stage_name": "stage_4_heavy", "num_agents": random.randint(500, 1000), "randomize": True, "stage_start": 300, "stage_length": 200}
+        return {"stage_name": "stage_4_heavy", "num_agents": random.randint(500, 1000), "randomize": True, "stage_start": 7, "stage_length": 2}
 
 
 
@@ -338,7 +418,7 @@ def reset_training_case(episode):
         barrier_pair_states=initial_barrier_states,
     )
 
-    return {
+    case = {
         "stage_name": stage["stage_name"],
         "num_agents": stage["num_agents"],
         "initial_barrier_states": initial_barrier_states,
@@ -346,6 +426,11 @@ def reset_training_case(episode):
         "stage_start": stage["stage_start"],
         "stage_length": stage["stage_length"],
     }
+
+    if "fixed_epsilon" in stage:
+        case["fixed_epsilon"] = stage["fixed_epsilon"]
+
+    return case
 
 
 def save_policy_checkpoint(policy, episode, reward, stage_name, save_dir="logs"):

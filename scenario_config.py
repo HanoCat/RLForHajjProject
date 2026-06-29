@@ -2,10 +2,10 @@ SCENARIO = {
 
 
     # simulation scenario settings
-    "name": "four_zones_precise_test",
-    "trajectory_file": "four_zones_test.sqlite",
+    "name": "./log/four_zones_precise_test",
+    "trajectory_file": "./log/four_zones_test.sqlite",
     "html_file": "add_real_agents.html",
-    "max_iterations": 100, # time stop for the simulation.
+    "max_iterations": 500, # time stop for the simulation.
 
     "min_agent_distance": 0.4,
     "safe_distance": 0.2,
@@ -13,7 +13,7 @@ SCENARIO = {
     "speed_max": 1.4,
 
     # SAC train
-    "num_episodes": 12,
+    "num_episodes": 5,
     "num_steps": 1,
     "start_random_episodes": 2,
     "batch_size_rl": 4,
@@ -38,7 +38,7 @@ SCENARIO = {
         "every_nth_frame": 20,
 
 
-        "write_trajectory": False,
+        "write_trajectory": True,
         "save_animation": False,
     },
 
