@@ -12,6 +12,30 @@ import numpy as np
 import pickle
 
 
+
+def get_stage_epsilon(
+        episode,
+        stage_start_episode,
+        stage_length,
+        epsilon_start=1.0,
+        epsilon_end=0.05,
+):
+    progress = (
+        episode - stage_start_episode
+    ) / max(stage_length - 1, 1)
+
+    epsilon = epsilon_start - (
+        epsilon_start - epsilon_end
+    ) * progress
+
+    epsilon = max(
+        epsilon_end,
+        epsilon,
+    )
+
+    return epsilon
+
+
 def save_training_plots(history, save_dir="logs/plots"):
     import os
     import pandas as pd
@@ -274,43 +298,29 @@ def compute_reward(result, debug=False):
 
     return float(reward)
 def get_training_stage(episode):
-    if episode < 50:
-        return {
-            "stage_name": "stage_1_fixed_small",
-            "num_agents": 50,
-            "randomize": False,
-        }
 
-    elif episode < 150:
-        return {
-            "stage_name": "stage_2_random_small_medium",
-            "num_agents": random.randint(50, 200),
-            "randomize": True,
-        }
+    # Rare early exposure to heavy crowd cases
+    if episode < SCENARIO["early_heavy_until_episode"]:
+        if random.random() < SCENARIO["early_heavy_probability"]:
+            return {
+                "stage_name": "early_heavy_probe",
+                "num_agents": random.randint(700, 1000),
+                "randomize": True,
+                "stage_start": episode,
+                "stage_length": 1,
+            }
 
-    elif episode < 300:
-        return {
-            "stage_name": "stage_3_random_medium",
-            "num_agents": random.randint(200, 500),
-            "randomize": True,
-        }
-
-    else:
-        return {
-            "stage_name": "stage_4_heavy",
-            "num_agents": random.randint(500, 1000),
-            "randomize": True,
-        }
-
-def get_training_stage_test(episode):
+    # normal curriculum continues here
     if episode < 3:
-        return {"stage_name": "stage_1_fixed_small", "num_agents": 30, "randomize": False}
-    elif episode < 6:
-        return {"stage_name": "stage_2_random_small", "num_agents": random.randint(30, 80), "randomize": True}
-    elif episode < 9:
-        return {"stage_name": "stage_3_random_medium", "num_agents": random.randint(80, 150), "randomize": True}
+        return {"stage_name": "stage_1_fixed_small", "num_agents": 50, "randomize": False, "stage_start": 0, "stage_length": 50}
+    elif episode < 5:
+        return {"stage_name": "stage_2_random_small", "num_agents": random.randint(50, 200), "randomize": True, "stage_start": 50, "stage_length": 100}
+    elif episode < 7:
+        return {"stage_name": "stage_3_random_medium", "num_agents": random.randint(200, 500), "randomize": True, "stage_start": 150, "stage_length": 150}
     else:
-        return {"stage_name": "stage_4_heavy_test", "num_agents": random.randint(150, 250), "randomize": True}
+        return {"stage_name": "stage_4_heavy", "num_agents": random.randint(500, 1000), "randomize": True, "stage_start": 300, "stage_length": 200}
+
+
 
 def reset_training_case(episode):
     stage = get_training_stage(episode)
@@ -333,6 +343,8 @@ def reset_training_case(episode):
         "num_agents": stage["num_agents"],
         "initial_barrier_states": initial_barrier_states,
         "state": state,
+        "stage_start": stage["stage_start"],
+        "stage_length": stage["stage_length"],
     }
 
 

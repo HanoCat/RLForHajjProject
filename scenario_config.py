@@ -21,6 +21,13 @@ SCENARIO = {
     "save_every_episodes": 4,
     "best_reward_threshold": 0.85,
 
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_episodes": 200,
+
+    "early_heavy_until_episode": 6,
+    "early_heavy_probability": 0.10,
+
 
     "training": True,
 

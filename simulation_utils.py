@@ -256,6 +256,7 @@ def run_simulation(simulation, max_iterations):
         max_agents = max(max_agents, current_agents)
         min_agents = min(min_agents, current_agents)
 
+
     writer = getattr(simulation, "_writer", None)
     if writer is not None:
         writer.close()

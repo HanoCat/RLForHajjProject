@@ -41,6 +41,11 @@ def train_RL():
     for episode in trange(SCENARIO["num_episodes"], desc="Training episodes"):
 
         case = reset_training_case(episode)
+        epsilon = get_stage_epsilon(
+            episode=episode,
+            stage_start_episode=case["stage_start"],
+            stage_length=case["stage_length"],
+        )
 
         num_agents = case["num_agents"]
         state = case["state"]
@@ -50,12 +55,25 @@ def train_RL():
 
         episode_reward = 0.0
 
+        print(
+            f"Episode={episode}, "
+            f"stage={stage_name}, "
+            f"epsilon={epsilon:.3f}"
+        )
+
         for step in range(SCENARIO["num_steps"]):
 
-            if episode < SCENARIO["start_random_episodes"]:
-                action = np.random.uniform(0.0, 1.0, size=7)
+            if np.random.rand() < epsilon:
+                action = np.random.uniform(
+                    0.0,
+                    1.0,
+                    size=7,
+                )
             else:
-                action = policy.select_action(state, evaluate=False)
+                action = policy.select_action(
+                    state,
+                    evaluate=False,
+                )
 
             barrier_pair_states = action_to_barrier_pair_states(action)
             print("Action states:", {k: round(v, 2) for k, v in barrier_pair_states.items()})
