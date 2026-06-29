@@ -1,5 +1,6 @@
 SCENARIO = {
 
+    "reward_sensitivity_agent_counts": [10, 50, 100, 200, 800],
 
     # simulation scenario settings
     "name": "./log/four_zones_precise_test",

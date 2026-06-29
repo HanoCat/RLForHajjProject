@@ -17,6 +17,40 @@ from jupedsim.internal.notebook_utils import read_sqlite_file
 
 
 
+class RunningNormalizer:
+    def __init__(self, enabled=True, clip_value=5.0):
+        self.enabled = enabled
+        self.clip_value = clip_value
+        self.mean = 0.0
+        self.var_sum = 0.0
+        self.count = 0
+
+    def update(self, x):
+        if not self.enabled:
+            return float(x)
+
+        x = float(x)
+        self.count += 1
+
+        if self.count == 1:
+            self.mean = x
+            self.var_sum = 0.0
+            return 0.0
+
+        delta = x - self.mean
+        self.mean += delta / self.count
+        self.var_sum += delta * (x - self.mean)
+
+        std = self.std
+        z = (x - self.mean) / (std + 1e-8)
+
+        return float(np.clip(z, -self.clip_value, self.clip_value))
+
+    @property
+    def std(self):
+        if self.count < 2:
+            return 1.0
+        return float(np.sqrt(self.var_sum / (self.count - 1)))
 
 def get_stage_epsilon(
         episode,
@@ -188,7 +222,7 @@ def is_position_valid(position, geometry):
     if hasattr(geometry, "walkable_areas"):
         return any(area.covers(point) for area in geometry.walkable_areas)
 
-    return True
+    return geometry.covers(point)
 
 
 def add_valid_agents_to_simulation(simulation, agent_groups, geometry):
@@ -315,6 +349,10 @@ def compute_pedpy_metrics(trajectory_file, geometry):
         individual_voronoi_data=individual_voronoi,
         measurement_area=measurement_area,
     )
+    individual_speed = pedpy.compute_individual_speed(
+        traj_data=traj_data,
+        frame_step=5,
+    )
 
     metrics = {
         "classic_mean_density": float(classic_density["density"].mean()),
@@ -325,9 +363,24 @@ def compute_pedpy_metrics(trajectory_file, geometry):
         "voronoi_95_density": float(voronoi_density["density"].quantile(0.95)),
     }
 
+    metrics.update({
+        "mean_speed": float(individual_speed["speed"].mean()),
+        "min_speed": float(individual_speed["speed"].min()),
+        "speed_05": float(individual_speed["speed"].quantile(0.05)),
+        "speed_10": float(individual_speed["speed"].quantile(0.10)),
+        "stopped_ratio": float((individual_speed["speed"] < 0.2).mean()),
+    })
+
     return metrics
 
-def compute_reward(result, trajectory_file=None, geometry=None, debug=False):
+def compute_reward(
+        result,
+        trajectory_file=None,
+        geometry=None,
+        reward_normalizer=None,
+        use_normalized_reward=False,
+        debug=False,
+):
     initial = max(result["initial_agents"], 1)
     remaining = result["remaining_agents"]
     evacuated = initial - remaining
@@ -336,8 +389,17 @@ def compute_reward(result, trajectory_file=None, geometry=None, debug=False):
     evacuation_ratio = evacuated / initial
     throughput_agents_per_second = evacuated / elapsed
 
-    mean_density = 0.0
-    max_density = 0.0
+    classic_mean_density = 0.0
+    classic_max_density = 0.0
+    voronoi_mean_density = 0.0
+    voronoi_max_density = 0.0
+    voronoi_95_density = 0.0
+
+    mean_speed = 0.0
+    min_speed = 0.0
+    speed_05 = 0.0
+    speed_10 = 0.0
+    stopped_ratio = 1.0
 
     if trajectory_file is not None and geometry is not None:
         pedpy_metrics = compute_pedpy_metrics(
@@ -345,37 +407,67 @@ def compute_reward(result, trajectory_file=None, geometry=None, debug=False):
             geometry=geometry,
         )
 
-        mean_density = pedpy_metrics["voronoi_mean_density"]
-        max_density = pedpy_metrics["voronoi_95_density"]
         classic_mean_density = pedpy_metrics["classic_mean_density"]
         classic_max_density = pedpy_metrics["classic_max_density"]
+        voronoi_mean_density = pedpy_metrics["voronoi_mean_density"]
+        voronoi_max_density = pedpy_metrics["voronoi_max_density"]
+        voronoi_95_density = pedpy_metrics["voronoi_95_density"]
 
-    reward = -(
-            0.5 * mean_density
-            + 1.0 * max_density
+        mean_speed = pedpy_metrics["mean_speed"]
+        min_speed = pedpy_metrics["min_speed"]
+        speed_05 = pedpy_metrics["speed_05"]
+        speed_10 = pedpy_metrics["speed_10"]
+        stopped_ratio = pedpy_metrics["stopped_ratio"]
+
+    speed_score = mean_speed / SCENARIO["speed_max"]
+    speed_score = np.clip(speed_score, 0.0, 1.0)
+    speed_loss = 1.0 - speed_score
+
+    raw_cost = (
+        0.6 * stopped_ratio
+        + 0.4 * speed_loss
     )
+
+    raw_reward = -float(np.clip(raw_cost, 0.0, 1.0))
+
+    if use_normalized_reward and reward_normalizer is not None:
+        normalized_cost = reward_normalizer.update(raw_cost)
+        reward = -float(normalized_cost)
+    else:
+        normalized_cost = raw_cost
+        reward = raw_reward
 
     if debug:
         print(
-            f"Reward debug | evacuated_ratio={evacuation_ratio:.3f}, "
-            f"throughput={throughput_agents_per_second:.3f}, "
-            f"mean_density={mean_density:.4f}, "
-            f"max_density={max_density:.4f}, "
-            f"reward={reward:.3f}"
+            f"Reward debug | reward={reward:.3f}, "
+            f"raw_reward={raw_reward:.3f}, "
+            f"raw_cost={raw_cost:.3f}, "
+            f"mean_speed={mean_speed:.3f}, "
+            f"stopped_ratio={stopped_ratio:.3f}, "
+            f"speed_loss={speed_loss:.3f}, "
+            f"evacuated_ratio={evacuation_ratio:.3f}, "
+            f"throughput={throughput_agents_per_second:.3f}"
         )
 
     return float(reward), {
+        "reward": reward,
+        "raw_reward": raw_reward,
+        "raw_cost": raw_cost,
+        "normalized_cost": normalized_cost,
+        "speed_loss": speed_loss,
+        "mean_speed": mean_speed,
+        "min_speed": min_speed,
+        "speed_05": speed_05,
+        "speed_10": speed_10,
+        "stopped_ratio": stopped_ratio,
         "evacuation_ratio": evacuation_ratio,
         "throughput_agents_per_second": throughput_agents_per_second,
-        "general_mean_density": classic_mean_density,
-        "general_max_density": classic_max_density,
-        "voronoi_mean_density": mean_density,
-        "voronoi_95_density": max_density,
-        "classic_mean_density": pedpy_metrics["classic_mean_density"],
-        "classic_max_density": pedpy_metrics["classic_max_density"],
+        "classic_mean_density": classic_mean_density,
+        "classic_max_density": classic_max_density,
+        "voronoi_mean_density": voronoi_mean_density,
+        "voronoi_max_density": voronoi_max_density,
+        "voronoi_95_density": voronoi_95_density,
     }
-
-
 def get_training_stage(episode):
 
     # Rare early exposure to heavy crowd cases
