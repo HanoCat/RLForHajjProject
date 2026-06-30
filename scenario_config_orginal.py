@@ -16,32 +16,25 @@ SCENARIO = {
 
     # SAC train
 
-    "num_episodes": 100,
-    "num_steps": 10,  # parallel rollouts per episode
-    "stages_test": [[0,20],[20,50],[50,80],[80,100]],
+    "num_episodes": 5,
+    "num_steps": 1,
+    "stages_test": [[0,3],[3,5],[5,7],[7,2]],
     "stages_train": [[],[],[],[]],
     "start_random_episodes": 2,
-    "batch_size_rl": 64,
-    "eval_freq_rl": 25,
-    "save_every_episodes": 25,
+    "batch_size_rl": 4,
+    "eval_freq_rl": 500,
+    "save_every_episodes": 4,
     "best_reward_threshold": 0.85,
 
     "epsilon_start": 1.0,
     "epsilon_end": 0.05,
     "epsilon_decay_episodes": 200,
 
-    "early_heavy_until_episode": 20,
-    "early_heavy_probability": 0.05,
+    "early_heavy_until_episode": 6,
+    "early_heavy_probability": 0.10,
 
 
     "training": True,
-
-    # Parallel RL training settings
-    "num_parallel_workers": 10,  # start safe on A4000x2/16 CPU; try 12 later if stable
-    "train_updates_per_batch": 10,
-    "replay_buffer_size": 100000,
-    "parallel_trajectory_dir": "/tmp/rl_hajj_trajectories",
-    "keep_worker_trajectories": False,
 
     "simulation_mode_training": {
         "dt": 0.05,

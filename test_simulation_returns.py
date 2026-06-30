@@ -9,7 +9,7 @@ from shapely.geometry import Point, box
 import pedpy
 from jupedsim.internal.notebook_utils import read_sqlite_file
 
-from scenario_config import SCENARIO
+from scenario_config_orginal import SCENARIO
 from barrier_control import apply_barrier_pair_states
 from simulation_utils import *
 

@@ -3,7 +3,7 @@ from absl import app
 from tqdm import tqdm, trange
 from shapely.geometry import Point
 
-from scenario_config import SCENARIO
+from scenario_config_orginal import SCENARIO
 from barrier_control import apply_barrier_pair_states
 from simulation_utils import *
 import random

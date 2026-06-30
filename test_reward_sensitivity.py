@@ -3,7 +3,7 @@ import random
 import numpy as np
 import pandas as pd
 
-from scenario_config import SCENARIO
+from scenario_config_orginal import SCENARIO
 from simulation_utils import *
 from RL_utils import *
 

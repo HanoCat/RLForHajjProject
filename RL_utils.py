@@ -4,7 +4,7 @@ from absl import app
 from tqdm import tqdm, trange
 from shapely.geometry import Point
 
-from scenario_config import SCENARIO
+from scenario_config_orginal import SCENARIO
 from barrier_control import apply_barrier_pair_states
 from simulation_utils import *
 import random
@@ -487,14 +487,14 @@ def get_training_stage(episode):
             }
 
     # normal curriculum continues here
-    if episode < 3:
-        return {"stage_name": "stage_1_fixed_small", "num_agents": 50, "randomize": False, "stage_start": 0, "stage_length": 3}
-    elif episode < 5:
-        return {"stage_name": "stage_2_random_small", "num_agents": random.randint(50, 200), "randomize": True, "stage_start": 3, "stage_length": 5}
-    elif episode < 7:
-        return {"stage_name": "stage_3_random_medium", "num_agents": random.randint(200, 500), "randomize": True, "stage_start": 5, "stage_length": 7}
+    if episode < SCENARIO["stages_test"][0][1]:
+        return {"stage_name": "stage_1_fixed_small", "num_agents": 50, "randomize": False, "stage_start": SCENARIO["stages_test"][0][0], "stage_length": SCENARIO["stages_test"][0][1]}
+    elif episode < SCENARIO["stages_test"][1][1]:
+        return {"stage_name": "stage_2_random_small", "num_agents": random.randint(50, 200), "randomize": True, "stage_start": SCENARIO["stages_test"][1][0], "stage_length": SCENARIO["stages_test"][1][1]}
+    elif episode < SCENARIO["stages_test"][2][1]:
+        return {"stage_name": "stage_3_random_medium", "num_agents": random.randint(200, 500), "randomize": True, "stage_start": SCENARIO["stages_test"][2][0], "stage_length": SCENARIO["stages_test"][2][1]}
     else:
-        return {"stage_name": "stage_4_heavy", "num_agents": random.randint(500, 1000), "randomize": True, "stage_start": 7, "stage_length": 2}
+        return {"stage_name": "stage_4_heavy", "num_agents": random.randint(500, 1000), "randomize": True, "stage_start": SCENARIO["stages_test"][3][0], "stage_length": SCENARIO["stages_test"][3][1]}
 
 
 

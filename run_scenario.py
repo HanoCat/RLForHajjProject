@@ -1,7 +1,7 @@
 
 import matplotlib.pyplot as plt
 
-from scenario_config import SCENARIO
+from scenario_config_orginal import SCENARIO
 from barrier_control import apply_barrier_pair_states
 from shapely.geometry import Point
 from simulation_utils import (
