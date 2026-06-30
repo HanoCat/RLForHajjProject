@@ -1,5 +1,6 @@
 SCENARIO = {
 
+    # this is only for test_reward_sensitivity.py file
     "reward_sensitivity_agent_counts": [10, 50, 100, 200, 800],
 
     # simulation scenario settings

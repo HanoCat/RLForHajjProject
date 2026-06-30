@@ -55,7 +55,7 @@ def train_RL():
         initial_barrier_states = case["initial_barrier_states"]
         stage_name = case["stage_name"]
         print('initial_barrier_states: ', initial_barrier_states)
-
+        print("the reset state:", state)
         episode_reward = 0.0
 
         print(
@@ -130,6 +130,12 @@ def train_RL():
 
             done = 1.0
 
+
+            # I've added the speed info inside the state..
+            state[0] = reward_metrics["mean_speed"]
+
+            print("before the buffer state:", state)
+
             replay_buffer.add(state, action, reward, next_state, done)
 
             losses = policy.train(
@@ -174,15 +180,18 @@ def train_RL():
 
             "evacuation_ratio": reward_metrics["evacuation_ratio"],
             "throughput_agents_per_second": reward_metrics["throughput_agents_per_second"],
+
             "mean_density": reward_metrics["voronoi_mean_density"],
-            "max_density": reward_metrics["voronoi_95_density"],
-            "general_mean_density": reward_metrics["general_mean_density"],
-            "general_max_density": reward_metrics["general_max_density"],
+            "max_density": reward_metrics["voronoi_max_density"],
+
+            "classic_mean_density": reward_metrics["classic_mean_density"],
+            "classic_max_density": reward_metrics["classic_max_density"],
 
 
             "remaining_agents": result["remaining_agents"],
             "iterations": result["iterations"],
             "elapsed_time": result["elapsed_time"],
+
             "actor_loss": None if losses is None else losses["actor_loss"],
             "critic_1_loss": None if losses is None else losses["critic_1_loss"],
             "critic_2_loss": None if losses is None else losses["critic_2_loss"],

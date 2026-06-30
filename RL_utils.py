@@ -309,8 +309,7 @@ def density_one_hot(num_agents):
 def build_state(num_agents, barrier_pair_states):
     pair_names = list(SCENARIO["barrier_pairs"].keys())
 
-    return np.array(
-        [num_agents / 1000.0]
+    return np.array([num_agents / 1000.0]
         + density_one_hot(num_agents)
         + [float(barrier_pair_states[p]) for p in pair_names],
         dtype=np.float32,
@@ -464,10 +463,13 @@ def compute_reward(
 
         "evacuation_ratio": evacuation_ratio,
         "throughput_agents_per_second": throughput_agents_per_second,
+
         "classic_mean_density": classic_mean_density,
         "classic_max_density": classic_max_density,
+
         "voronoi_mean_density": voronoi_mean_density,
         "voronoi_max_density": voronoi_max_density,
+
         "voronoi_95_density": voronoi_95_density,
     }
 def get_training_stage(episode):
