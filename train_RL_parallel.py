@@ -15,7 +15,7 @@ import time
 import traceback
 import numpy as np
 
-from scenario_config_orginal import SCENARIO
+from scenario_config import SCENARIO
 from simulation_utils import *
 from RL_utils import *
 from sac_agent import SACAgent, ReplayBuffer
