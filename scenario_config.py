@@ -7,7 +7,7 @@ SCENARIO = {
     "name": "./log/four_zones_precise_test",
     "trajectory_file": "./log/four_zones_test.sqlite",
     "html_file": "add_real_agents.html",
-    "max_iterations": 500, # time stop for the simulation.
+    "max_iterations": 1500, # time stop for the simulation.
 
     "min_agent_distance": 0.4,
     "safe_distance": 0.2,
@@ -15,6 +15,9 @@ SCENARIO = {
     "speed_max": 1.4,
 
     # SAC train
+    "use_exp_reward": True,
+    "reward_alpha_exp": 5.0,
+    "reward_scale": 1.0,
 
     "num_episodes": 100,
     "num_steps": 10,  # parallel rollouts per episode

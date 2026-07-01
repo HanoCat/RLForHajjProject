@@ -429,12 +429,23 @@ def compute_reward(
 
     raw_reward = -float(np.clip(raw_cost, 0.0, 1.0))
 
+    use_exp_reward = SCENARIO.get("use_exp_reward", False)
+
+    if use_exp_reward:
+        alpha_exp = SCENARIO.get("reward_alpha_exp", 8.0)
+        reward_scale = SCENARIO.get("reward_scale", 1.0)
+
+        reward = -reward_scale * (
+                np.exp(alpha_exp * abs(raw_reward)) - 1.0
+        )
+    else:
+        reward = raw_reward
+
     if use_normalized_reward and reward_normalizer is not None:
         normalized_cost = reward_normalizer.update(raw_cost)
         reward = -float(normalized_cost)
     else:
         normalized_cost = raw_cost
-        reward = raw_reward
 
     if debug:
         print(
