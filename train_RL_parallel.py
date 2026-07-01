@@ -15,10 +15,10 @@ import time
 import traceback
 import numpy as np
 
-from scenario_config import SCENARIO
 from simulation_utils import *
 from RL_utils import *
 from sac_agent import SACAgent, ReplayBuffer
+from scenario_config import SCENARIO
 
 
 # These are filled once per worker process by init_worker().
