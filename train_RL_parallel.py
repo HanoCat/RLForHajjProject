@@ -100,9 +100,13 @@ def run_simulation_job(job):
             barrier_pair_states=barrier_pair_states,
         )
 
-        # Keep your existing idea: put measured speed into the state stored in replay.
+        mean_speed = reward_metrics["mean_speed"]
+
         replay_state = state.copy()
-        replay_state[0] = reward_metrics["mean_speed"]
+        replay_state[0] = mean_speed
+
+        next_state = next_state.copy()
+        next_state[0] = mean_speed
 
         keep_trajectories = SCENARIO.get("keep_worker_trajectories", False)
         if trajectory_file is not None and not keep_trajectories:
