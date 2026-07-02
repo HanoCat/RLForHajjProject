@@ -16,7 +16,7 @@ SCENARIO = {
 
     # SAC train
     "use_exp_reward": True,
-    "reward_alpha_exp": 5.0,
+    "reward_alpha_exp": 3.0,
     "reward_scale": 1.0,
 
     "num_episodes": 100,
