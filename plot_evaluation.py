@@ -10,7 +10,7 @@ def make_evaluation_plots(csv_path="logs/evaluation_results.csv"):
     os.makedirs(out_dir, exist_ok=True)
 
     # Cleaner method names
-    method_order = ["all_open", "all_closed", "random", "rl_policy"]
+    method_order = ["all_open", "all_closed", "random", "rl_policy", "gt_original", "rule_based_pilgrimage"]
 
     def save_bar(metric, ylabel, filename, title):
         summary = df.groupby("method")[metric].mean().reindex(method_order)

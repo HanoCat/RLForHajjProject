@@ -15,10 +15,11 @@ from barrier_control import clean_geom
 
 
 OUTPUT_DIR = "outputs_parallel"
-OUTPUT_CSV = os.path.join(OUTPUT_DIR, "evaluation_gt_rule_parallel.csv")
+OUTPUT_CSV = os.path.join(OUTPUT_DIR, "evaluation_gt_rule_parallel_unseen_size.csv")
 
 SEEDS = [101, 202, 303, 404, 505]
-NUM_AGENTS_LIST = [300, 500, 700, 900]
+NUM_AGENTS_LIST = [5, 10, 1000, 1500] #NUM_AGENTS_LIST = [300, 500, 700, 900]
+
 METHODS = ["gt_original", "rule_based_pilgrimage"]
 
 NUM_EVAL_WORKERS = 10

@@ -16,10 +16,10 @@ from RL_utils import *
 
 
 POLICY_PATH = "RL_model.pickle"
-OUTPUT_CSV = "outputs_parallel/evaluation_results_parallel.csv"
+OUTPUT_CSV = "outputs_parallel/evaluation_results_parallel_unseen_size.csv"
 
 SEEDS = [101, 202, 303, 404, 505]
-NUM_AGENTS_LIST = [300, 500, 700, 900]
+NUM_AGENTS_LIST = [5, 10, 1000, 1500]
 METHODS = ["all_open", "all_closed", "random", "rl_policy"]
 
 NUM_EVAL_WORKERS = 10
