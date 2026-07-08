@@ -20,7 +20,18 @@
 
 > *(Add your paper abstract here.)*
 
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red)
+![JuPedSim](https://img.shields.io/badge/JuPedSim-Latest-green)
+![Conda](https://img.shields.io/badge/Conda-Environment-brightgreen)
 
+### ✨ Key Features
+
+- Continuous reinforcement learning, Soft Actor-Critic (SAC), control of barrier states.
+- Adaptive multi-barrier coordination.
+- Crowd simulation using JuPedSim.
+- Single-GPU and parallel multi-CPU training pipelines.
+- Quantitative and qualitative evaluation across varying number of crowd agents.
 ---
 
 ## Installation
@@ -145,8 +156,10 @@ paper/RL_Crowd_Barrier_Control.pdf
 
 ## Contact
 
-Alhanouf Alolyan
+**Alhanouf Alolyan**
 
-Princess Nourah bint Abdulrahman University
+📧 Email: hano.alolyan@gmail.com
 
-GitHub: https://github.com/USERNAME
+🔗 LinkedIn: https://www.linkedin.com/in/hano-alolyan
+
+🐙 GitHub: https://github.com/HanoCat
