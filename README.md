@@ -31,7 +31,10 @@
 - Adaptive multi-barrier coordination.
 - Crowd simulation using JuPedSim.
 - Single-GPU and parallel multi-CPU training pipelines.
+- Generalization to unseen crowd scenarios.
 - Quantitative and qualitative evaluation across varying number of crowd agents.
+
+
 ---
 
 ## Installation
@@ -112,29 +115,19 @@ python evaluate_policy_parallel.py
 
 The following animations compare different barrier control strategies under various crowd densities.
 
-|          Ground Truth Configuration          |                   RL Policy Configuration                   |
-|:--------------------------------------------:|:-----------------------------------------------------------:|
-|  ![](rendered_outputs/gif/gt_10_agents.gif)  |        ![](rendered_outputs/gif/rl_agent_303_10.gif)        |
-| ![](rendered_outputs/gif/gt_300_agents.gif)  |       ![](rendered_outputs/gif/rl_agent_303_300.gif)        |
-| ![](rendered_outputs/gif/gt_1500_agents.gif) |       ![](rendered_outputs/gif/rl_agent_303_1500.gif)       |
+| Number of Agents |          Ground Truth Configuration          |                   RL Policy Configuration                   |
+|:----------------:|:--------------------------------------------:|:-----------------------------------------------------------:|
+|        10        | ![](rendered_outputs/gif/gt_10_agents.gif)  |        ![](rendered_outputs/gif/rl_agent_303_10.gif)        |
+|       300        |![](rendered_outputs/gif/gt_300_agents.gif)  |       ![](rendered_outputs/gif/rl_agent_303_300.gif)        |
+|       1500       |![](rendered_outputs/gif/gt_1500_agents.gif) |       ![](rendered_outputs/gif/rl_agent_303_1500.gif)       |
 
 ---
 
-|              All Open Barrier              |                 All Closed Barrier                  |
-|:------------------------------------------:|:--------------------------------------------:|
-|  ![](rendered_outputs/gif/allopen_10.gif)  |  ![](rendered_outputs/gif/allclosed_10.gif)  |
-| ![](rendered_outputs/gif/allopen_300.gif)  | ![](rendered_outputs/gif/allclosed_300.gif)  |
-| ![](rendered_outputs/gif/allopen_1500.gif) | ![](rendered_outputs/gif/allclosed_1500.gif) |
-
----
-
-## Method Highlights
-
-- Continuous barrier control using reinforcement learning
-- Multi-barrier coordinated control
-- JuPedSim crowd simulation
-- Evaluation across multiple crowd densities
-- Generalization to unseen crowd scenarios
+| Number of Agents |              All Open Barrier              |                 All Closed Barrier                  |
+|:----------------:|:------------------------------------------:|:--------------------------------------------:|
+|        10        |  ![](rendered_outputs/gif/allopen_10.gif)  |  ![](rendered_outputs/gif/allclosed_10.gif)  |
+|       300        | ![](rendered_outputs/gif/allopen_300.gif)  | ![](rendered_outputs/gif/allclosed_300.gif)  |
+|       1500       | ![](rendered_outputs/gif/allopen_1500.gif) | ![](rendered_outputs/gif/allclosed_1500.gif) |
 
 ---
 
