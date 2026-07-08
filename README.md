@@ -63,8 +63,8 @@ pip install -r requirements.txt
 
 ## Training
 
-Two training implementations are provided.
-
+Two training implementations are provided. 
+Experimental setup: The proposed model was trained on a Paperspace cloud workstation with NVIDIA RTX A4000 GPUs (16 GB) and 12 CPU cores. Parallel crowd simulations were used during training, and 100 episodes were completed in approximately 4 h 44 min.
 ### Option 1 — Standard Training
 
 Recommended for a single workstation.
