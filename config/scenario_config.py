@@ -1,77 +1,32 @@
-SCENARIO = {
 
-    # this is only for test_reward_sensitivity.py file
-    "reward_sensitivity_agent_counts": [10, 50, 100, 200, 800],
-    "every_nth_frame_n": 5,
+from config.base_config import CONFIG
+
+SCENARIO = {
+    **CONFIG,
+
     # simulation scenario settings
-    "name": "./log/four_zones_precise_test",
-    "trajectory_file": "./log/four_zones_test.sqlite",
+    "name": "agents_initial_positions",
+    "trajectory_file": "../outputs/scenario_log/scenario.sqlite",
     "html_file": "org.html",
     "max_iterations": 1500, # time stop for the simulation.
+
+    # simulation pram
+    "simulation": {
+        "dt": 0.05,
+        "training_num_agents": None,
+        "shuffle_agents_each_episode": True,
+        "every_nth_frame": 5,
+        "write_trajectory": True,
+        "save_animation": True,
+    },
+
+    "every_nth_frame_n": 5,
 
     "min_agent_distance": 0.4,
     "safe_distance": 0.2,
     "speed_min": 1.0,
     "speed_max": 1.4,
 
-    # SAC train
-    "use_exp_reward": True,
-    "reward_alpha_exp": 3.0,
-    "reward_scale": 1.0,
-
-    "num_episodes": 100,
-    "num_steps": 10,  # parallel rollouts per episode
-    "stages_test": [[0,20],[20,50],[50,80],[80,100]],
-    "stages_train": [[],[],[],[]],
-    "start_random_episodes": 2,
-    "batch_size_rl": 64,
-    "eval_freq_rl": 25,
-    "save_every_episodes": 25,
-    "best_reward_threshold": 0.85,
-
-    "epsilon_start": 1.0,
-    "epsilon_end": 0.05,
-    "epsilon_decay_episodes": 200,
-
-    "early_heavy_until_episode": 20,
-    "early_heavy_probability": 0.05,
-
-
-    "training": True,
-
-    # Parallel RL training settings
-    "num_parallel_workers": 10,  # start safe on A4000x2/16 CPU; try 12 later if stable
-    "train_updates_per_batch": 10,
-    "replay_buffer_size": 100000,
-    "parallel_trajectory_dir": "/tmp/rl_hajj_trajectories",
-    "keep_worker_trajectories": False,
-
-    "simulation_mode_training": {
-        "dt": 0.05,
-        "training_num_agents": 100,   # use None for all agents
-        "shuffle_agents_each_episode": True,
-        "every_nth_frame": 20,
-
-
-        "write_trajectory": True,
-        "save_animation": False,
-    },
-
-    "simulation_mode_vis": {
-        "dt": 0.05,
-        "training_num_agents": None,
-        "shuffle_agents_each_episode": True,
-        "every_nth_frame": 5,
-
-
-        "write_trajectory": True,
-        "save_animation": True,
-    },
-
-
-
-    # load file of built env
-    "env_json": "processed_environment.json",
 
     ### Movable barrier ###
     "movable_barrier_ids": [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 2301, 2302],
@@ -120,120 +75,114 @@ SCENARIO = {
     },
 
 
-    ### Agents Initialization ###
-    # load agents from the head detection of the scene
-    "p2pnet_points_file": "p2pnet_points.json",
-    "p2pnet_min_score": 0.5,
-    "p2pnet_max_agents": None,
-
     # add more synthetic agents randomly based on the different zones in the scene
     "agent_groups": [
         {
             "group_id": "ZONE1_1",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.86, 0.82, 0.98, 0.98),
             "mid_box_frac":   (0.76, 0.82, 0.85, 0.98),
             "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
         },
         {
             "group_id": "ZONE1_2",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.76, 0.82, 0.85, 0.98),
             "mid_box_frac": (0.63, 0.82, 0.73, 0.98),
             "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
         },
         {
             "group_id": "ZONE1_3",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.63, 0.82, 0.73, 0.98),
             "mid_box_frac": (0.56, 0.82, 0.63, 0.98),
             "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
         },
         {
             "group_id": "ZONE1_4",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.56, 0.82, 0.63, 0.98),
             "mid_box_frac": (0.30, 0.82, 0.53, 0.98),
             "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
         },
         {
             "group_id": "ZONE1_5",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.30, 0.82, 0.53, 0.98),
             "mid_box_frac": (0.09, 0.82, 0.23, 0.98),
             "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
         },
         {## final zone 1
             "group_id": "ZONE1_6",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.09, 0.82, 0.23, 0.98),
             "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
         },
         {
             "group_id": "ZONE2_1",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.65, 0.26, 0.99, 0.42),
             "mid_box_frac": (0.60, 0.26, 0.65, 0.42),
             "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
         },
         {
             "group_id": "ZONE2_2",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.60, 0.26, 0.65, 0.42),
             "mid_box_frac": (0.32, 0.26, 0.58, 0.50),
             "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
         },
         {
             "group_id": "ZONE2_3",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.32, 0.26, 0.58, 0.50),
             "mid_box_frac": (0.25, 0.30, 0.32, 0.50),
             "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
         },
         {
             "group_id": "ZONE2_4",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.25, 0.30, 0.32, 0.50),
             "mid_box_frac": (0.09, 0.35, 0.23, 0.50),
             "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
         },
         {## final zone 2
             "group_id": "ZONE2_5",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.09, 0.35, 0.23, 0.50),
             "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
         },
         {
             "group_id": "ZONE3_1",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.60, 0.00, 0.99, 0.14),
             "mid_box_frac": (0.55, 0.00, 0.60, 0.14),
             "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
         },
         {
             "group_id": "ZONE3_2",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.55, 0.00, 0.60, 0.14),
             "mid_box_frac": (0.30, 0.00, 0.52, 0.25),
             "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
         },
         {
             "group_id": "ZONE3_3",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.30, 0.00, 0.52, 0.25),
             "mid_box_frac": (0.22, 0.00, 0.30, 0.27),
             "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
         },
         {
             "group_id": "ZONE3_4",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.22, 0.00, 0.30, 0.27),
             "mid_box_frac": (0.09, 0.00, 0.19, 0.30),
             "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
         },
         { ## final zone 3
             "group_id": "ZONE3_5",
-            "count": 5,
+            "count": 1,
             "start_box_frac": (0.09, 0.00, 0.19, 0.30),
             "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
         },

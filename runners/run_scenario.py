@@ -1,6 +1,11 @@
-from config.scenario_config_orginal import SCENARIO
-from utils.barrier_control import apply_barrier_pair_states
+# runners/run_scenario.py
+
+from pathlib import Path
+
 from shapely.geometry import Point
+
+from config.scenario_config import SCENARIO
+from utils.barrier_control import apply_barrier_pair_states
 from utils.simulation_utils import (
     load_environment,
     make_zone_from_fraction,
@@ -15,148 +20,167 @@ from utils.simulation_utils import (
 )
 
 
-_, env = load_environment(SCENARIO["env_json"])
 
-geometry = apply_barrier_pair_states(
-    env,
-    SCENARIO["barrier_pair_states"],
-    SCENARIO["barrier_pairs"],
-    SCENARIO["barrier_pose_config"],
-)
+def build_geometry(config):
+    _, env = load_environment(config["env_json"])
 
-agent_groups = []
-total_agents = 0
+    geometry = apply_barrier_pair_states(
+        env,
+        config["barrier_pair_states"],
+        config["barrier_pairs"],
+        config["barrier_pose_config"],
+    )
 
-p2pnet_positions = []
-
-if "p2pnet_points_file" in SCENARIO:
-        p2pnet_positions = load_p2pnet_points(
-            SCENARIO["p2pnet_points_file"],
-            geometry,
-            min_score=SCENARIO.get("p2pnet_min_score", 0.0),
-            max_agents=SCENARIO.get("p2pnet_max_agents"),
-        )
-        #print("Has p2pnet key:", "p2pnet_points_file" in SCENARIO)
-        #print("P2PNet loaded before grouping:", len(p2pnet_positions))
+    return geometry
 
 
+def load_detection_points(config, geometry):
+    if "p2pnet_points_file" not in config:
+        return []
 
-for group in SCENARIO["agent_groups"]:
-    start_zone = make_zone_from_fraction(
+    return load_p2pnet_points(
+        config["p2pnet_points_file"],
         geometry,
-        group["start_box_frac"],
-        safe_distance=SCENARIO["safe_distance"],
+        min_score=config.get("p2pnet_min_score", 0.0),
+        max_agents=config.get("p2pnet_max_agents"),
     )
 
-    goal_zone = make_zone_from_fraction(
-        geometry,
-        group["goal_box_frac"],
-        safe_distance=SCENARIO["safe_distance"],
-    )
 
-    goal_area = make_convex_goal_from_zone(
-        goal_zone,
-        size=0.4,
-        safe_distance=SCENARIO["safe_distance"],
-    )
+def build_agent_groups(config, geometry, p2pnet_positions):
+    agent_groups = []
+    total_agents = 0
 
-    random_positions = random_points(
-        start_zone,
-        group["count"],
-        min_distance=SCENARIO["min_agent_distance"],
-    )
-
-    p2pnet_group_positions = [
-        pos for pos in p2pnet_positions
-        if start_zone.covers(Point(pos))
-    ]
-    #print(group["group_id"], "matched p2pnet:", len(p2pnet_group_positions))
-
-    positions = random_positions + p2pnet_group_positions
-
-
-    ''' 
-    mid_zone = None
-    mid_points = None
-
-    if "mid_box_frac" in group:
-        mid_zone = make_zone_from_fraction(
+    for group in config["agent_groups"]:
+        start_zone = make_zone_from_fraction(
             geometry,
-            group["mid_box_frac"],
-            safe_distance=SCENARIO["safe_distance"],
+            group["start_box_frac"],
+            safe_distance=config["safe_distance"],
         )
 
-        mid_points = random_points(
-            mid_zone,
-            len(positions),
-            min_distance=0.0,
+        goal_zone = make_zone_from_fraction(
+            geometry,
+            group["goal_box_frac"],
+            safe_distance=config["safe_distance"],
         )
-    '''
 
-    agent_groups.append({
-        "group_id": group["group_id"],
-        "positions": positions,
-        "start_zone": start_zone,
-        "goal_zone": goal_zone,
-        "goal_area": goal_area,
-    })
+        goal_area = make_convex_goal_from_zone(
+            goal_zone,
+            size=0.4,
+            safe_distance=config["safe_distance"],
+        )
 
-    total_agents += len(positions)
+        random_positions = random_points(
+            start_zone,
+            group["count"],
+            min_distance=config["min_agent_distance"],
+        )
 
-#print("Geometry bounds:", geometry.bounds)
-#print("First p2pnet point:", p2pnet_positions[0] if p2pnet_positions else None)
+        p2pnet_group_positions = [
+            pos for pos in p2pnet_positions
+            if start_zone.covers(Point(pos))
+        ]
 
-#print("Scenario:", SCENARIO["name"])
-#print("Geometry area:", round(geometry.area, 2))
-#print("Groups:", len(agent_groups))
-#print("Total agents:", total_agents)
+        positions = random_positions + p2pnet_group_positions
 
-#for group in agent_groups:
-  #  print(
-   #     group["group_id"],
-    #    "| agents:", len(group["positions"]),
-    #    "| start area:", round(group["start_zone"].area, 2),
-    #    "| goal area:", round(group["goal_area"].area, 2),
-   # )
+        agent_groups.append({
+            "group_id": group["group_id"],
+            "positions": positions,
+            "start_zone": start_zone,
+            "goal_zone": goal_zone,
+            "goal_area": goal_area,
+        })
+
+        total_agents += len(positions)
+
+    return agent_groups, total_agents
 
 
+def run_scenario(log_dir):
+    config = dict(SCENARIO)
+    config["trajectory_file"] = str(log_dir / "trajectory.sqlite")
+    config["html_file"] = str(log_dir / "animation.html")
+    config["zones_plot_file"] = str(log_dir / "zones_agents.png")
 
-plot_zones_agents(geometry, agent_groups, SCENARIO)
 
-simulation = create_simulation(
-    geometry,
-    SCENARIO["trajectory_file"],
-    dt=0.05,
-)
+    print(f"Running scenario: {config['name']}")
 
-total_added = 0
+    geometry = build_geometry(config)
 
-for group in agent_groups:
-    added = add_agents(
+    p2pnet_positions = load_detection_points(config, geometry)
+    agent_groups, total_agents = build_agent_groups(
+        config,
+        geometry,
+        p2pnet_positions,
+    )
+
+    print("Geometry area:", round(geometry.area, 2))
+    print("Groups:", len(agent_groups))
+    print("Total agents:", total_agents)
+
+    for group in agent_groups:
+        print(
+            group["group_id"],
+            "| agents:", len(group["positions"]),
+            "| start area:", round(group["start_zone"].area, 2),
+            "| goal area:", round(group["goal_area"].area, 2),
+        )
+
+    plot_zones_agents(
+        geometry,
+        agent_groups,
+        config
+    )
+
+    simulation = create_simulation(
+        geometry,
+        config["trajectory_file"],
+        config["simulation"]
+    )
+
+    total_added = 0
+
+    for group in agent_groups:
+        added = add_agents(
+            simulation,
+            group["positions"],
+            group["goal_area"],
+            speed_min=config["speed_min"],
+            speed_max=config["speed_max"],
+        )
+
+        print(f"Added agents for {group['group_id']}:", added)
+        total_added += added
+
+    print("Total added agents:", total_added)
+
+    result = run_simulation(
         simulation,
-        group["positions"],
-        group["goal_area"],
-        speed_min=SCENARIO["speed_min"],
-        speed_max=SCENARIO["speed_max"],
+        config["max_iterations"],
     )
 
-    print(f"Added agents for {group['group_id']}:", added)
-    total_added += added
+    print("Result:", result)
 
-print("Total added agents:", total_added)
+    save_animation(
+        config["every_nth_frame_n"],
+        config["trajectory_file"],
+        config["html_file"],
+        title=config["name"],
+    )
 
-result = run_simulation(
-    simulation,
-    SCENARIO["max_iterations"],
-)
+    print("Scenario outputs saved in:", config["output_dir"])
+    print("Animation saved:", config["html_file"])
 
-print("Result:", result)
+    return {
+        "result": result,
+        "geometry": geometry,
+        "agent_groups": agent_groups,
+        "total_agents": total_agents,
+        "output_dir": config["output_dir"],
+        "trajectory_file": config["trajectory_file"],
+        "html_file": config["html_file"],
+        "zones_plot_file": config["zones_plot_file"],
+    }
 
-save_animation(
-    SCENARIO["every_nth_frame_n"],
-    SCENARIO["trajectory_file"],
-    SCENARIO["html_file"],
-    title=SCENARIO["name"],
-)
 
-print("Animation saved:", SCENARIO["html_file"])
+if __name__ == "__main__":
+    run_scenario()

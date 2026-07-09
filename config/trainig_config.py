@@ -1,4 +1,9 @@
-SCENARIO = {
+
+
+from config.base_config import CONFIG
+
+TRAINING_CONFIG = {
+    **CONFIG,
 
     # this is only for test_reward_sensitivity.py file
     "reward_sensitivity_agent_counts": [10, 50, 100, 200, 800],
@@ -121,10 +126,7 @@ SCENARIO = {
 
 
     ### Agents Initialization ###
-    # load agents from the head detection of the scene
-    "p2pnet_points_file": "../json/p2pnet_points.json",
-    "p2pnet_min_score": 0.5,
-    "p2pnet_max_agents": None,
+
 
     # add more synthetic agents randomly based on the different zones in the scene
     "agent_groups": [

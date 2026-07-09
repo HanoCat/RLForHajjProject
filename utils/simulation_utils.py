@@ -322,7 +322,7 @@ def interp_pose(closed, open_, s):
     }
 
 
-def plot_zones_agents(geometry, agent_groups, SCENARIO):
+def plot_zones_agents(geometry, agent_groups, config):
     fig, ax = plt.subplots(figsize=(14, 7))
 
     x, y = geometry.exterior.xy
@@ -373,6 +373,5 @@ def plot_zones_agents(geometry, agent_groups, SCENARIO):
             )
         '''
     ax.set_aspect("equal")
-    # ax.legend(fontsize=8)
-    ax.set_title(SCENARIO["name"])
+    ax.set_title(config["name"])
     plt.show()
