@@ -1,8 +1,8 @@
 from tqdm import tqdm
 
-from config.scenario_config import SCENARIO
-from barrier_control import apply_barrier_pair_states
-from simulation_utils import *
+from config.trainig_config import SCENARIO
+from utils.barrier_control import apply_barrier_pair_states
+from utils.simulation_utils import *
 import random
 import numpy as np
 import pickle

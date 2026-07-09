@@ -1,4 +1,9 @@
-from config.scenario_config_orginal import SCENARIO
+import os
+from absl import app
+from tqdm import trange
+import numpy as np
+
+from config.trainig_config import SCENARIO
 from network.sac_agent import SACAgent, ReplayBuffer
 from utils.RL_utils import *
 
