@@ -3,29 +3,29 @@ from absl import app
 from tqdm import trange
 import numpy as np
 
-from config.trainig_config import SCENARIO
+from config.trainig_config import TRAINING_CONFIG
 from network.sac_agent import SACAgent, ReplayBuffer
 from utils.RL_utils import *
 
 
 def train_RL():
 
-    env_json = SCENARIO["env_json"]
+    env_json = TRAINING_CONFIG["env_json"]
     _, env = load_environment(env_json)
 
     print(f"Environment loaded: {env_json}")
 
     base_geometry = create_geometry(
         env,
-        SCENARIO["barrier_pair_states"],
+        TRAINING_CONFIG["barrier_pair_states"],
     )
 
     agent_groups = load_agents(base_geometry)
 
-    if SCENARIO["training"]:
-        simulation_pram = SCENARIO["simulation_mode_training"]
+    if TRAINING_CONFIG["training"]:
+        simulation_pram = TRAINING_CONFIG["simulation_mode_training"]
     else:
-        simulation_pram = SCENARIO["simulation_mode_vis"]
+        simulation_pram = TRAINING_CONFIG["simulation_mode_vis"]
 
     policy = SACAgent(state_dim=11, action_dim=7)
     replay_buffer = ReplayBuffer(max_size=100000)
@@ -33,7 +33,7 @@ def train_RL():
 
     print('Start Training Episodes ....')
 
-    for episode in trange(SCENARIO["num_episodes"], desc="Training episodes"):
+    for episode in trange(TRAINING_CONFIG["num_episodes"], desc="Training episodes"):
 
         case = reset_training_case(episode)
         if "fixed_epsilon" in case:
@@ -59,7 +59,7 @@ def train_RL():
             f"epsilon={epsilon:.3f}"
         )
 
-        for step in range(SCENARIO["num_steps"]):
+        for step in range(TRAINING_CONFIG["num_steps"]):
 
             if np.random.rand() < epsilon:
                 action = np.random.uniform(
@@ -83,7 +83,7 @@ def train_RL():
 
             trajectory_file = None
             if simulation_pram.get("write_trajectory", False):
-                root, ext = os.path.splitext(SCENARIO["trajectory_file"])
+                root, ext = os.path.splitext(TRAINING_CONFIG["trajectory_file"])
                 trajectory_file = f"{root}_episode_{episode + 1}_step_{step + 1}{ext}"
 
             simulation = create_simulation(
@@ -106,7 +106,7 @@ def train_RL():
 
             result = run_simulation(
                 simulation,
-                SCENARIO["max_iterations"],
+                TRAINING_CONFIG["max_iterations"],
             )
 
             reward, reward_metrics = compute_reward(
@@ -135,7 +135,7 @@ def train_RL():
 
             losses = policy.train(
                 replay_buffer,
-                batch_size=SCENARIO["batch_size_rl"],
+                batch_size=TRAINING_CONFIG["batch_size_rl"],
             )
 
             print(
@@ -150,14 +150,14 @@ def train_RL():
                 save_animation(
                     simulation_pram["every_nth_frame"],
                     trajectory_file,
-                    SCENARIO["html_file"],
-                    title=SCENARIO["name"],
+                    TRAINING_CONFIG["html_file"],
+                    title=TRAINING_CONFIG["name"],
                 )
 
-                print("Animation saved:", SCENARIO["html_file"])
+                print("Animation saved:", TRAINING_CONFIG["html_file"])
 
-        should_save_stage = (episode + 1) % SCENARIO["save_every_episodes"] == 0
-        should_save_best = episode_reward >= SCENARIO["best_reward_threshold"]
+        should_save_stage = (episode + 1) % TRAINING_CONFIG["save_every_episodes"] == 0
+        should_save_best = episode_reward >= TRAINING_CONFIG["best_reward_threshold"]
         history.append({
             "episode": episode,
             "stage": stage_name,
@@ -199,7 +199,7 @@ def train_RL():
             "pair_7_action": action[6],
         })
 
-        if should_save_stage or should_save_best or ((episode + 1) % SCENARIO["eval_freq_rl"] == 0):
+        if should_save_stage or should_save_best or ((episode + 1) % TRAINING_CONFIG["eval_freq_rl"] == 0):
             save_policy_checkpoint(
                 policy=policy,
                 episode=episode,

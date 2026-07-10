@@ -4,7 +4,7 @@ from pathlib import Path
 
 from shapely.geometry import Point
 
-from config.scenario_config import SCENARIO
+from config.scenario_config import TRAINING_CONFIG
 from utils.barrier_control import apply_barrier_pair_states
 from utils.simulation_utils import (
     load_environment,
@@ -96,7 +96,7 @@ def build_agent_groups(config, geometry, p2pnet_positions):
 
 
 def run_scenario(log_dir):
-    config = dict(SCENARIO)
+    config = dict(TRAINING_CONFIG)
     config["trajectory_file"] = str(log_dir / "trajectory.sqlite")
     config["html_file"] = str(log_dir / "animation.html")
     config["zones_plot_file"] = str(log_dir / "zones_agents.png")
@@ -180,7 +180,3 @@ def run_scenario(log_dir):
         "html_file": config["html_file"],
         "zones_plot_file": config["zones_plot_file"],
     }
-
-
-if __name__ == "__main__":
-    run_scenario()

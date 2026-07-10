@@ -12,7 +12,7 @@ import traceback
 
 from utils.RL_utils import *
 from network.sac_agent import SACAgent, ReplayBuffer
-from config.scenario_config import SCENARIO
+from config.trainig_config import TRAINING_CONFIG
 
 
 # These are filled once per worker process by init_worker().
@@ -52,7 +52,7 @@ def run_simulation_job(job):
 
         trajectory_file = None
         if _WORKER_SIMULATION_PARAM.get("write_trajectory", False):
-            traj_dir = SCENARIO.get("parallel_trajectory_dir", "/tmp/rl_hajj_trajectories")
+            traj_dir = TRAINING_CONFIG.get("parallel_trajectory_dir", "/tmp/rl_hajj_trajectories")
             os.makedirs(traj_dir, exist_ok=True)
             trajectory_file = os.path.join(
                 traj_dir,
@@ -79,7 +79,7 @@ def run_simulation_job(job):
 
         result = run_simulation(
             simulation,
-            SCENARIO["max_iterations"],
+            TRAINING_CONFIG["max_iterations"],
         )
 
         reward, reward_metrics = compute_reward(
@@ -102,7 +102,7 @@ def run_simulation_job(job):
         next_state = next_state.copy()
         next_state[0] = mean_speed
 
-        keep_trajectories = SCENARIO.get("keep_worker_trajectories", False)
+        keep_trajectories = TRAINING_CONFIG.get("keep_worker_trajectories", False)
         if trajectory_file is not None and not keep_trajectories:
             try:
                 os.remove(trajectory_file)
@@ -140,10 +140,10 @@ def run_simulation_job(job):
 def make_jobs_for_episode(policy, episode):
     jobs = []
 
-    for step in range(SCENARIO["num_steps"]):
+    for step in range(TRAINING_CONFIG["num_steps"]):
         # Use a different curriculum sample for each parallel step.
         # This gives 10 independent rollouts per episode when num_steps=10.
-        case = reset_training_case(episode * SCENARIO["num_steps"] + step)
+        case = reset_training_case(episode * TRAINING_CONFIG["num_steps"] + step)
 
         if "fixed_epsilon" in case:
             epsilon = case["fixed_epsilon"]
@@ -177,34 +177,34 @@ def make_jobs_for_episode(policy, episode):
 def train_RL():
     os.makedirs("../logs", exist_ok=True)
 
-    env_json = SCENARIO["env_json"]
+    env_json = TRAINING_CONFIG["env_json"]
     _, env = load_environment(env_json)
     print(f"Environment loaded: {env_json}")
 
     base_geometry = create_geometry(
         env,
-        SCENARIO["barrier_pair_states"],
+        TRAINING_CONFIG["barrier_pair_states"],
     )
 
     agent_groups = load_agents(base_geometry)
 
-    if SCENARIO["training"]:
-        simulation_param = SCENARIO["simulation_mode_training"]
+    if TRAINING_CONFIG["training"]:
+        simulation_param = TRAINING_CONFIG["simulation_mode_training"]
     else:
-        simulation_param = SCENARIO["simulation_mode_vis"]
+        simulation_param = TRAINING_CONFIG["simulation_mode_vis"]
 
     policy = SACAgent(state_dim=11, action_dim=7)
     print(f"SAC device: {policy.device}")
 
-    replay_buffer = ReplayBuffer(max_size=SCENARIO.get("replay_buffer_size", 100000))
+    replay_buffer = ReplayBuffer(max_size=TRAINING_CONFIG.get("replay_buffer_size", 100000))
     history = []
 
-    num_workers = int(SCENARIO.get("num_parallel_workers", min(8, os.cpu_count() or 1)))
-    train_updates_per_batch = int(SCENARIO.get("train_updates_per_batch", SCENARIO["num_steps"]))
+    num_workers = int(TRAINING_CONFIG.get("num_parallel_workers", min(8, os.cpu_count() or 1)))
+    train_updates_per_batch = int(TRAINING_CONFIG.get("train_updates_per_batch", TRAINING_CONFIG["num_steps"]))
 
     print("Start Parallel Training ....")
-    print(f"Episodes: {SCENARIO['num_episodes']}")
-    print(f"Parallel rollouts per episode: {SCENARIO['num_steps']}")
+    print(f"Episodes: {TRAINING_CONFIG['num_episodes']}")
+    print(f"Parallel rollouts per episode: {TRAINING_CONFIG['num_steps']}")
     print(f"CPU workers: {num_workers}")
     print(f"Train updates per batch: {train_updates_per_batch}")
 
@@ -218,7 +218,7 @@ def train_RL():
         initargs=(env, agent_groups, simulation_param),
     ) as executor:
 
-        for episode in trange(SCENARIO["num_episodes"], desc="Parallel training episodes"):
+        for episode in trange(TRAINING_CONFIG["num_episodes"], desc="Parallel training episodes"):
             jobs = make_jobs_for_episode(policy, episode)
 
             futures = [executor.submit(run_simulation_job, job) for job in jobs]
@@ -252,7 +252,7 @@ def train_RL():
             for _ in range(train_updates_per_batch):
                 losses = policy.train(
                     replay_buffer,
-                    batch_size=SCENARIO["batch_size_rl"],
+                    batch_size=TRAINING_CONFIG["batch_size_rl"],
                 )
                 if losses is not None:
                     last_losses = losses
@@ -315,16 +315,16 @@ def train_RL():
             })
 
             print(
-                f"Episode={episode + 1}/{SCENARIO['num_episodes']} | "
+                f"Episode={episode + 1}/{TRAINING_CONFIG['num_episodes']} | "
                 f"rollouts={len(batch_results)} | "
                 f"reward_mean={mean_reward:.3f} | "
                 f"buffer={len(replay_buffer)} | "
                 f"losses={last_losses}"
             )
 
-            should_save_stage = (episode + 1) % SCENARIO["save_every_episodes"] == 0
-            should_save_best = mean_reward >= SCENARIO["best_reward_threshold"]
-            should_save_eval = (episode + 1) % SCENARIO["eval_freq_rl"] == 0
+            should_save_stage = (episode + 1) % TRAINING_CONFIG["save_every_episodes"] == 0
+            should_save_best = mean_reward >= TRAINING_CONFIG["best_reward_threshold"]
+            should_save_eval = (episode + 1) % TRAINING_CONFIG["eval_freq_rl"] == 0
 
             if should_save_stage or should_save_best or should_save_eval:
                 save_policy_checkpoint(
@@ -337,7 +337,7 @@ def train_RL():
 
     save_policy_checkpoint(
         policy=policy,
-        episode=SCENARIO["num_episodes"] - 1,
+        episode=TRAINING_CONFIG["num_episodes"] - 1,
         reward=history[-1]["reward"] if history else 0.0,
         stage_name="final_parallel",
     )

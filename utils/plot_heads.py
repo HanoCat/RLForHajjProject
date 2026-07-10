@@ -3,7 +3,7 @@ import json
 import matplotlib.pyplot as plt
 from shapely import wkt
 
-from config.scenario_config import SCENARIO
+from config.scenario_config import TRAINING_CONFIG
 from utils.simulation_utils import load_environment
 from barrier_control import clean_geom
 
@@ -28,7 +28,7 @@ def plot_polygon(ax, geom, facecolor="lightgray", edgecolor="black", alpha=0.35)
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    _, env = load_environment(SCENARIO["env_json"])
+    _, env = load_environment(TRAINING_CONFIG["env_json"])
 
     geometry = clean_geom(
         wkt.loads(env["geometry_wkt"]["simulation_geometry"])

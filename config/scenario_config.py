@@ -1,7 +1,7 @@
 
 from config.base_config import CONFIG
 
-SCENARIO = {
+TRAINING_CONFIG = {
     **CONFIG,
 
     # simulation scenario settings

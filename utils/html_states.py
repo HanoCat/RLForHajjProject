@@ -3,7 +3,7 @@ import random
 import numpy as np
 from shapely import wkt
 
-from config.scenario_config import SCENARIO
+from config.scenario_config import TRAINING_CONFIG
 from utils.simulation_utils import (
     load_environment,
     create_simulation,
@@ -66,7 +66,7 @@ def get_states_from_csv(csv_file, method="rl_policy", seed=101, num_agents=300):
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    _, env = load_environment(SCENARIO["env_json"])
+    _, env = load_environment(TRAINING_CONFIG["env_json"])
     data = "RL"  # "GT" or "RL"
 
     EVAL_CSV = "evaluation_all.csv"
@@ -88,8 +88,8 @@ def main():
         geometry = apply_barrier_pair_states(
             env,
             rl_pair_states,
-            SCENARIO["barrier_pairs"],
-            SCENARIO["barrier_pose_config"],
+            TRAINING_CONFIG["barrier_pairs"],
+            TRAINING_CONFIG["barrier_pose_config"],
         )
 
 
@@ -101,7 +101,7 @@ def main():
         shuffle=True,
     )
 
-    sim_param = dict(SCENARIO["simulation_mode_vis"])
+    sim_param = dict(TRAINING_CONFIG["simulation_mode_vis"])
     sim_param["write_trajectory"] = True
     sim_param["save_animation"] = True
 
@@ -121,7 +121,7 @@ def main():
 
     result = run_simulation(
         simulation,
-        SCENARIO["max_iterations"],
+        TRAINING_CONFIG["max_iterations"],
     )
 
     print("Result:", result)
