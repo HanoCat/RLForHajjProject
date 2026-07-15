@@ -27,11 +27,12 @@ def prepare_log_dir(mode):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="RLForHajj: adaptive crowd barrier simulation, training, and evaluation"
+        description="RLForHajj"
     )
 
     parser.add_argument(
-        "mode",
+        "--mode",
+        default="scenario",
         choices=["scenario", "train-seq", "train-parallel", "evaluate"],
         help="Choose what to run.",
     )

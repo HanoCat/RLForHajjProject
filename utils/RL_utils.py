@@ -1,6 +1,6 @@
 from tqdm import tqdm
 
-from config.trainig_config import SCENARIO
+from config.trainig_config import TRAINING_CONFIG
 from utils.barrier_control import apply_barrier_pair_states
 from utils.simulation_utils import *
 import random
@@ -139,8 +139,8 @@ def create_geometry(env, barrier_pair_states):
     return apply_barrier_pair_states(
         env,
         barrier_pair_states,
-        SCENARIO["barrier_pairs"],
-        SCENARIO["barrier_pose_config"],
+        TRAINING_CONFIG["barrier_pairs"],
+        TRAINING_CONFIG["barrier_pose_config"],
     )
 
 
@@ -149,38 +149,38 @@ def load_agents(base_geometry):
     total_agents = 0
     p2pnet_positions = []
 
-    if "p2pnet_points_file" in SCENARIO:
+    if "p2pnet_points_file" in TRAINING_CONFIG:
         p2pnet_positions = load_p2pnet_points(
-            SCENARIO["p2pnet_points_file"],
+            TRAINING_CONFIG["p2pnet_points_file"],
             base_geometry,
-            min_score=SCENARIO.get("p2pnet_min_score", 0.0),
-            max_agents=SCENARIO.get("p2pnet_max_agents"),
+            min_score=TRAINING_CONFIG.get("p2pnet_min_score", 0.0),
+            max_agents=TRAINING_CONFIG.get("p2pnet_max_agents"),
         )
 
-    with tqdm(total=len(SCENARIO["agent_groups"]), desc="Loading groups") as pbar:
-        for group in SCENARIO["agent_groups"]:
+    with tqdm(total=len(TRAINING_CONFIG["agent_groups"]), desc="Loading groups") as pbar:
+        for group in TRAINING_CONFIG["agent_groups"]:
             start_zone = make_zone_from_fraction(
                 base_geometry,
                 group["start_box_frac"],
-                safe_distance=SCENARIO["safe_distance"],
+                safe_distance=TRAINING_CONFIG["safe_distance"],
             )
 
             goal_zone = make_zone_from_fraction(
                 base_geometry,
                 group["goal_box_frac"],
-                safe_distance=SCENARIO["safe_distance"],
+                safe_distance=TRAINING_CONFIG["safe_distance"],
             )
 
             goal_area = make_convex_goal_from_zone(
                 goal_zone,
                 size=0.4,
-                safe_distance=SCENARIO["safe_distance"],
+                safe_distance=TRAINING_CONFIG["safe_distance"],
             )
 
             random_positions = random_points(
                 start_zone,
                 group["count"],
-                min_distance=SCENARIO["min_agent_distance"],
+                min_distance=TRAINING_CONFIG["min_agent_distance"],
             )
 
             p2pnet_group_positions = [
@@ -237,8 +237,8 @@ def add_valid_agents_to_simulation(simulation, agent_groups, geometry):
                 simulation,
                 valid_positions,
                 group["goal_area"],
-                speed_min=SCENARIO["speed_min"],
-                speed_max=SCENARIO["speed_max"],
+                speed_min=TRAINING_CONFIG["speed_min"],
+                speed_max=TRAINING_CONFIG["speed_max"],
             )
 
         total_added += len(valid_positions)
@@ -284,7 +284,7 @@ def select_agent_subset(agent_groups, max_agents=None, shuffle=True):
 
 
 def action_to_barrier_pair_states(action):
-    pair_names = list(SCENARIO["barrier_pairs"].keys())
+    pair_names = list(TRAINING_CONFIG["barrier_pairs"].keys())
 
     return {
         pair_name: float(np.clip(action[i], 0.0, 1.0))
@@ -302,7 +302,7 @@ def density_one_hot(num_agents):
 
 
 def build_state(num_agents, barrier_pair_states):
-    pair_names = list(SCENARIO["barrier_pairs"].keys())
+    pair_names = list(TRAINING_CONFIG["barrier_pairs"].keys())
 
     return np.array([num_agents / 1000.0]
         + density_one_hot(num_agents)
@@ -413,7 +413,7 @@ def compute_reward(
         speed_10 = pedpy_metrics["speed_10"]
         stopped_ratio = pedpy_metrics["stopped_ratio"]
 
-    speed_score = mean_speed / SCENARIO["speed_max"]
+    speed_score = mean_speed / TRAINING_CONFIG["speed_max"]
     speed_score = np.clip(speed_score, 0.0, 1.0)
     speed_loss = 1.0 - speed_score
 
@@ -424,11 +424,11 @@ def compute_reward(
 
     raw_reward = -float(np.clip(raw_cost, 0.0, 1.0))
 
-    use_exp_reward = SCENARIO.get("use_exp_reward", False)
+    use_exp_reward = TRAINING_CONFIG.get("use_exp_reward", False)
 
     if use_exp_reward:
-        alpha_exp = SCENARIO.get("reward_alpha_exp", 8.0)
-        reward_scale = SCENARIO.get("reward_scale", 1.0)
+        alpha_exp = TRAINING_CONFIG.get("reward_alpha_exp", 8.0)
+        reward_scale = TRAINING_CONFIG.get("reward_scale", 1.0)
 
         reward = -reward_scale * (
                 np.exp(alpha_exp * abs(raw_reward)) - 1.0
@@ -481,8 +481,8 @@ def compute_reward(
 def get_training_stage(episode):
 
     # Rare early exposure to heavy crowd cases
-    if episode < SCENARIO["early_heavy_until_episode"]:
-        if random.random() < SCENARIO["early_heavy_probability"]:
+    if episode < TRAINING_CONFIG["early_heavy_until_episode"]:
+        if random.random() < TRAINING_CONFIG["early_heavy_probability"]:
             return {
                 "stage_name": "early_heavy_probe",
                 "num_agents": random.randint(500, 800),
@@ -493,14 +493,14 @@ def get_training_stage(episode):
             }
 
     # normal curriculum continues here
-    if episode < SCENARIO["stages_test"][0][1]:
-        return {"stage_name": "stage_1_fixed_small", "num_agents": 50, "randomize": False, "stage_start": SCENARIO["stages_test"][0][0], "stage_length": SCENARIO["stages_test"][0][1]}
-    elif episode < SCENARIO["stages_test"][1][1]:
-        return {"stage_name": "stage_2_random_small", "num_agents": random.randint(50, 200), "randomize": True, "stage_start": SCENARIO["stages_test"][1][0], "stage_length": SCENARIO["stages_test"][1][1]}
-    elif episode < SCENARIO["stages_test"][2][1]:
-        return {"stage_name": "stage_3_random_medium", "num_agents": random.randint(200, 500), "randomize": True, "stage_start": SCENARIO["stages_test"][2][0], "stage_length": SCENARIO["stages_test"][2][1]}
+    if episode < TRAINING_CONFIG["stages_test"][0][1]:
+        return {"stage_name": "stage_1_fixed_small", "num_agents": 50, "randomize": False, "stage_start": TRAINING_CONFIG["stages_test"][0][0], "stage_length": TRAINING_CONFIG["stages_test"][0][1]}
+    elif episode < TRAINING_CONFIG["stages_test"][1][1]:
+        return {"stage_name": "stage_2_random_small", "num_agents": random.randint(50, 200), "randomize": True, "stage_start": TRAINING_CONFIG["stages_test"][1][0], "stage_length": TRAINING_CONFIG["stages_test"][1][1]}
+    elif episode < TRAINING_CONFIG["stages_test"][2][1]:
+        return {"stage_name": "stage_3_random_medium", "num_agents": random.randint(200, 500), "randomize": True, "stage_start": TRAINING_CONFIG["stages_test"][2][0], "stage_length": TRAINING_CONFIG["stages_test"][2][1]}
     else:
-        return {"stage_name": "stage_4_heavy", "num_agents": random.randint(500, 1000), "randomize": True, "stage_start": SCENARIO["stages_test"][3][0], "stage_length": SCENARIO["stages_test"][3][1]}
+        return {"stage_name": "stage_4_heavy", "num_agents": random.randint(500, 1000), "randomize": True, "stage_start": TRAINING_CONFIG["stages_test"][3][0], "stage_length": TRAINING_CONFIG["stages_test"][3][1]}
 
 
 
@@ -510,10 +510,10 @@ def reset_training_case(episode):
     if stage["randomize"]:
         initial_barrier_states = {
             pair_name: random.uniform(0.0, 1.0)
-            for pair_name in SCENARIO["barrier_pairs"].keys()
+            for pair_name in TRAINING_CONFIG["barrier_pairs"].keys()
         }
     else:
-        initial_barrier_states = SCENARIO["barrier_pair_states"]
+        initial_barrier_states = TRAINING_CONFIG["barrier_pair_states"]
 
     state = build_state(
         num_agents=stage["num_agents"],

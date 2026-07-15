@@ -1,10 +1,31 @@
-# Reinforcement Learning for Adaptive Crowd Flow Control Using Dynamic Barriers
+# APBC-RL 
 
-> Reinforcement learning framework for adaptive pedestrian barrier control in high-density crowd simulations using JuPedSim.
+(Adaptive Pedestrian Barrier Control using Reinforcement Learning) is a framework for optimizing pedestrian barrier configurations in JuPedSim crowd simulations. It combines image-based crowd initialization, adaptive barrier control, and reinforcement learning to learn effective barrier configurations under different crowd conditions.
+
+
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red)
+![JuPedSim](https://img.shields.io/badge/JuPedSim-Latest-green)
+![Conda](https://img.shields.io/badge/Conda-Environment-brightgreen)
+
+This repo for the paper: "APBC-RL: Adaptive Pedestrian Barrier Control Framework for Crowd Simulations Based on Reinforcement Learning".
+
 
 ---
 
-## Overview
+## 📝 Overview
+
+Crowd barriers are widely used to regulate pedestrian movement during large public events such as pilgrimages. However, fixed barrier layouts often create unnecessary stopping and local congestion even when they successfully control the overall crowd flow. Finding better barrier configurations is difficult because there is no dataset that provides the best barrier placement for a given crowd scene. We address this challenge by introducing a simulation-driven reinforcement learning framework that learns barrier configurations without requiring labelled training data. Starting from a segmented crowd scene we construct a realistic simulation environment that reproduces the observed pedestrian distribution. This environment is then used to train a Soft Actor-Critic (SAC) agent that continuously adjusts barrier positions to improve pedestrian movement. Unlike supervised approaches the proposed framework allows the agent to explore barrier configurations that have never been observed in real data. We evaluate the learned policy under unseen numbers of pedestrians. The learned policy consistently outperforms the existing manually designed barrier configuration by reducing pedestrian stops while maintaining effective flow regulation. These results demonstrate that combining computer vision crowd simulation and reinforcement learning provides an effective framework for optimizing crowd control infrastructure.
+
+### ✨ Key Features
+
+- **Modular reinforcement learning framework** – easily replace the RL algorithm (e.g., SAC, PPO, TD3, etc.).
+- **Flexible crowd simulation** – supports different JuPedSim crowd models (currently CollisionFreeSpeedModelV2).
+- **Adaptive multi-barrier control** – continuous optimization of multiple barrier pairs.
+- **Scenario exploration** – configure agents, barriers, and simulation settings without changing the source code.
+- **Sequential and parallel simulation pipelines** – accelerate RL training by running JuPedSim simulations in parallel across CPU cores while the RL policy trains on the GPU.
+- **Built-in evaluation** – quantitative metrics, interactive HTML visualization, and qualitative analysis.
+- **Generalization experiments** – evaluate trained policies on unseen crowd scenarios.
 
 <div align="center">
 
@@ -15,24 +36,6 @@
 </div>
 
 ---
-
-## Abstract
-
-> Crowd barriers are widely used to regulate pedestrian movement during large public events such as pilgrimages. However, fixed barrier layouts often create unnecessary stopping and local congestion even when they successfully control the overall crowd flow. Finding better barrier configurations is difficult because there is no dataset that provides the best barrier placement for a given crowd scene. We address this challenge by introducing a simulation-driven reinforcement learning framework that learns barrier configurations without requiring labelled training data. Starting from a segmented crowd scene we construct a realistic simulation environment that reproduces the observed pedestrian distribution. This environment is then used to train a Soft Actor-Critic (SAC) agent that continuously adjusts barrier positions to improve pedestrian movement. Unlike supervised approaches the proposed framework allows the agent to explore barrier configurations that have never been observed in real data. We evaluate the learned policy under unseen numbers of pedestrians. The learned policy consistently outperforms the existing manually designed barrier configuration by reducing pedestrian stops while maintaining effective flow regulation. These results demonstrate that combining computer vision crowd simulation and reinforcement learning provides an effective framework for optimizing crowd control infrastructure.
-
-![Python](https://img.shields.io/badge/Python-3.11-blue)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.x-red)
-![JuPedSim](https://img.shields.io/badge/JuPedSim-Latest-green)
-![Conda](https://img.shields.io/badge/Conda-Environment-brightgreen)
-
-### ✨ Key Features
-
-- Continuous reinforcement learning, Soft Actor-Critic (SAC), control of barrier states.
-- Adaptive multi-barrier coordination.
-- Crowd simulation using JuPedSim.
-- Single-GPU and parallel multi-CPU training pipelines.
-- Generalization to unseen crowd scenarios.
-- Quantitative and qualitative evaluation across varying number of crowd agents.
 
 
 ---

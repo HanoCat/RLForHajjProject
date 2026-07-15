@@ -352,26 +352,7 @@ def plot_zones_agents(geometry, agent_groups, config):
             label=f"{group['group_id']} agents",
         )
 
-        ''' 
-        if group["mid_zone"] is not None:
-            mx, my = group["mid_zone"].exterior.xy
-            ax.plot(
-                mx,
-                my,
-                linewidth=2,
-                linestyle=":",
-                label=f"{group['group_id']} mid zone",
-            )
 
-            mid_points = group["mid_points"]
-            ax.scatter(
-                [p[0] for p in mid_points],
-                [p[1] for p in mid_points],
-                s=12,
-                marker="x",
-                label=f"{group['group_id']} mid points",
-            )
-        '''
     ax.set_aspect("equal")
     ax.set_title(config["name"])
     plt.show()

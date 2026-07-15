@@ -8,7 +8,7 @@ from network.sac_agent import SACAgent, ReplayBuffer
 from utils.RL_utils import *
 
 
-def train_RL():
+def train_sequential():
 
     env_json = TRAINING_CONFIG["env_json"]
     _, env = load_environment(env_json)
@@ -211,14 +211,4 @@ def train_RL():
 
 
 
-
-
-
-def main(argv):
-    train_RL()
-
-
-
-if __name__ == "__main__":
-    app.run(main)
 

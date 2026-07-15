@@ -1,192 +1,113 @@
-
 from config.base_config import CONFIG
+
 
 TRAINING_CONFIG = {
     **CONFIG,
 
-    # simulation scenario settings
-    "name": "agents_initial_positions",
-    "trajectory_file": "../outputs/scenario_log/scenario.sqlite",
-    "html_file": "org.html",
-    "max_iterations": 1500, # time stop for the simulation.
+    # ------------------------------------------------------------------
+    # Scenario output settings
+    # ------------------------------------------------------------------
 
-    # simulation pram
+    # A descriptive name for this scenario.
+    # This name may appear in plots, logs, and generated HTML files.
+    "name": "agents_initial_positions",
+
+    # SQLite file used to store the agents' trajectories during simulation.
+    "trajectory_file": "../logs/scenario/scenario.sqlite",
+
+    # Directory where all scenario outputs will be saved.
+    "output_dir": "../logs/scenario/",
+
+    # HTML file containing the generated crowd animation and results table.
+    "html_file": "../logs/scenario/org.html",
+
+    # Maximum number of simulation iterations.
+    # The simulation stops when either:
+    # 1. all agents finish, or
+    # 2. this maximum number of iterations is reached.
+    "max_iterations": 1500,
+
+
+    # ------------------------------------------------------------------
+    # Agent initialization settings
+    # ------------------------------------------------------------------
+
+    # Important:
+    # At least one of the following options must be True.
+    #
+    # p2pnet_load:
+    #   Load initial agent positions extracted from the crowd image
+    #   using P2PNet detections.
+    #
+    # random_agents_load:
+    #   Generate random initial agent positions inside each start zone.
+    #
+    # Both can be True if you want to combine random agents and
+    # P2PNet-detected agents in the same simulation.
+    "p2pnet_load": False,
+    "random_agents_load": True,
+
+
+    # ------------------------------------------------------------------
+    # Simulation engine settings
+    # ------------------------------------------------------------------
+
     "simulation": {
+        # Simulation time step in seconds.
+        # Smaller values may improve numerical accuracy but increase runtime.
         "dt": 0.05,
-        "training_num_agents": None,
-        "shuffle_agents_each_episode": True,
+
+        # Save one trajectory frame every N simulation iterations.
+        # For example, 5 means every fifth frame is stored.
         "every_nth_frame": 5,
+
+        # Save the simulation trajectory to the SQLite file.
+        # This must usually remain True if you want metrics or animations.
         "write_trajectory": True,
+
+        # Generate and save an HTML animation after the simulation.
         "save_animation": True,
     },
 
-    "every_nth_frame_n": 5,
 
+    # ------------------------------------------------------------------
+    # Agent placement and movement settings
+    # ------------------------------------------------------------------
+
+    # Minimum allowed distance between added agents.
+    # Increasing this value spreads agents farther apart.
     "min_agent_distance": 0.4,
+
+    # Safety margin used when creating start zones, goal zones,
+    # and other areas close to environment boundaries.
     "safe_distance": 0.2,
+
+    # Minimum desired walking speed assigned to an agent.
     "speed_min": 1.0,
+
+    # Maximum desired walking speed assigned to an agent.
+    # Each agent receives a speed sampled between speed_min and speed_max.
     "speed_max": 1.4,
 
 
-    ### Movable barrier ###
-    "movable_barrier_ids": [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 2301, 2302],
+    # ------------------------------------------------------------------
+    # Barrier configuration
+    # ------------------------------------------------------------------
 
-    "barrier_pairs": {
-        "pair_1": (12, 13),
-        "pair_2": (14, 15),
-        "pair_3": (16, 17),
-        "pair_4": (18, 19),
-        "pair_5": (20, 22),
-        "pair_6": (21, 24),
-        "pair_7": (2301, 2302),
-    },
-
-    "barrier_pose_config": {
-        12: {"closed": {"dx": -0.20, "dy": -0.30, "angle": -1}, "open": {"dx": 0.0, "dy": 0.30, "angle": -30}},
-        13: {"closed": {"dx": -0.30, "dy": 0.90, "angle": 10}, "open": {"dx": 0.0, "dy": -0.35, "angle": 30}},
-
-        14: {"closed": {"dx": 0.35, "dy": -0.60, "angle": 1}, "open": {"dx": 0.0, "dy": 0.0, "angle": -25}},
-        15: {"closed": {"dx": -0.30, "dy": 0.70, "angle": -1}, "open": {"dx": 0.0, "dy": 0.0, "angle": 30}},
-
-        16: {"closed": {"dx": 0.0, "dy": -0.75, "angle": 15}, "open": {"dx": -0.25, "dy": 0.15, "angle": -30}},
-        17: {"closed": {"dx": 0.0, "dy": 0.75, "angle": -10}, "open": {"dx": 0.30, "dy": -0.40, "angle": 35}},
-
-        18: {"closed": {"dx": 0.0, "dy": 0.20, "angle": 0}, "open": {"dx": -0.20, "dy": -0.25, "angle": -50}},
-        19: {"closed": {"dx": 1.50, "dy": -0.60, "angle": -10}, "open": {"dx": 0.25, "dy": 0.20, "angle": 30}},
-
-        20: {"closed": {"dx": 0.0, "dy": 0.25, "angle": 0}, "open": {"dx": -0.30, "dy": 0.20, "angle": 30}},
-        22: {"closed": {"dx": 0.0, "dy": -0.25, "angle": 0}, "open": {"dx": -0.20, "dy": 0.0, "angle": -30}},
-
-        21: {"closed": {"dx": 0.0, "dy": -0.55, "angle": 0}, "open": {"dx": 0.25, "dy": 0.10, "angle": -25}},
-        24: {"closed": {"dx": 0.0, "dy": 0.90, "angle": -10}, "open": {"dx": -0.25, "dy": -0.25, "angle": 30}},
-
-        2301: {"closed": {"dx": 0.0, "dy": -0.80, "angle": 15}, "open": {"dx": -0.25, "dy": -0.15, "angle": -30}},
-        2302: {"closed": {"dx": 0.0, "dy": 0.90, "angle": -20}, "open": {"dx": 0.25, "dy": -0.10, "angle": 30}},
-    },
-
+    # Continuous state of each barrier pair.
+    #
+    # 0.0 = fully closed
+    # 1.0 = fully open
+    # Values between 0.0 and 1.0 create intermediate barrier poses.
+    #
+    # The exact movement of each pair is defined in barrier_pose_config.
     "barrier_pair_states": {
-    "pair_1": 0.0,
-    "pair_2": 1.0,
-    "pair_3": 1.0,
-    "pair_4": 1.0,
-    "pair_5": 1.0,
-    "pair_6": 1.0,
-    "pair_7": 1.0,
+        "pair_1": 1.0,
+        "pair_2": 1.0,
+        "pair_3": 0.0,
+        "pair_4": 1.0,
+        "pair_5": 1.0,
+        "pair_6": 0.0,
+        "pair_7": 0.0,
     },
-
-
-    # add more synthetic agents randomly based on the different zones in the scene
-    "agent_groups": [
-        {
-            "group_id": "ZONE1_1",
-            "count": 1,
-            "start_box_frac": (0.86, 0.82, 0.98, 0.98),
-            "mid_box_frac":   (0.76, 0.82, 0.85, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE1_2",
-            "count": 1,
-            "start_box_frac": (0.76, 0.82, 0.85, 0.98),
-            "mid_box_frac": (0.63, 0.82, 0.73, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE1_3",
-            "count": 1,
-            "start_box_frac": (0.63, 0.82, 0.73, 0.98),
-            "mid_box_frac": (0.56, 0.82, 0.63, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE1_4",
-            "count": 1,
-            "start_box_frac": (0.56, 0.82, 0.63, 0.98),
-            "mid_box_frac": (0.30, 0.82, 0.53, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE1_5",
-            "count": 1,
-            "start_box_frac": (0.30, 0.82, 0.53, 0.98),
-            "mid_box_frac": (0.09, 0.82, 0.23, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {## final zone 1
-            "group_id": "ZONE1_6",
-            "count": 1,
-            "start_box_frac": (0.09, 0.82, 0.23, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE2_1",
-            "count": 1,
-            "start_box_frac": (0.65, 0.26, 0.99, 0.42),
-            "mid_box_frac": (0.60, 0.26, 0.65, 0.42),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {
-            "group_id": "ZONE2_2",
-            "count": 1,
-            "start_box_frac": (0.60, 0.26, 0.65, 0.42),
-            "mid_box_frac": (0.32, 0.26, 0.58, 0.50),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {
-            "group_id": "ZONE2_3",
-            "count": 1,
-            "start_box_frac": (0.32, 0.26, 0.58, 0.50),
-            "mid_box_frac": (0.25, 0.30, 0.32, 0.50),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {
-            "group_id": "ZONE2_4",
-            "count": 1,
-            "start_box_frac": (0.25, 0.30, 0.32, 0.50),
-            "mid_box_frac": (0.09, 0.35, 0.23, 0.50),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {## final zone 2
-            "group_id": "ZONE2_5",
-            "count": 1,
-            "start_box_frac": (0.09, 0.35, 0.23, 0.50),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {
-            "group_id": "ZONE3_1",
-            "count": 1,
-            "start_box_frac": (0.60, 0.00, 0.99, 0.14),
-            "mid_box_frac": (0.55, 0.00, 0.60, 0.14),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-        {
-            "group_id": "ZONE3_2",
-            "count": 1,
-            "start_box_frac": (0.55, 0.00, 0.60, 0.14),
-            "mid_box_frac": (0.30, 0.00, 0.52, 0.25),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-        {
-            "group_id": "ZONE3_3",
-            "count": 1,
-            "start_box_frac": (0.30, 0.00, 0.52, 0.25),
-            "mid_box_frac": (0.22, 0.00, 0.30, 0.27),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-        {
-            "group_id": "ZONE3_4",
-            "count": 1,
-            "start_box_frac": (0.22, 0.00, 0.30, 0.27),
-            "mid_box_frac": (0.09, 0.00, 0.19, 0.30),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-        { ## final zone 3
-            "group_id": "ZONE3_5",
-            "count": 1,
-            "start_box_frac": (0.09, 0.00, 0.19, 0.30),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-    ],
-
-
 }

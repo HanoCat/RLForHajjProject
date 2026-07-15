@@ -174,7 +174,7 @@ def make_jobs_for_episode(policy, episode):
     return jobs
 
 
-def train_RL():
+def train_parallel():
     os.makedirs("../logs", exist_ok=True)
 
     env_json = TRAINING_CONFIG["env_json"]
@@ -344,10 +344,3 @@ def train_RL():
     save_training_plots(history)
     print("Parallel training finished.")
 
-
-def main(argv):
-    train_RL()
-
-
-if __name__ == "__main__":
-    app.run(main)
