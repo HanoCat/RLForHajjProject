@@ -32,7 +32,7 @@ def main():
 
     parser.add_argument(
         "--mode",
-        default="train-seq",
+        default="scenario",
         choices=["scenario", "train-seq", "train-parallel", "evaluate"],
         help="Choose what to run.",
     )
