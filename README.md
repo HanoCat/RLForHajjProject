@@ -121,7 +121,19 @@ The scenario mode automatically generates at `/logs/scenario`:
 
 
 ---
-## Training
+
+## 👾 Ground of Truth Scenarios Examples
+
+| Number of Agents |            Ground Truth Barriers             |                  
+|:----------------:|:--------------------------------------------:|
+|        10        |  ![](rendered_outputs/gif/gt_10_agents.gif)  | 
+|       300        | ![](rendered_outputs/gif/gt_300_agents.gif)  | 
+|       1500       | ![](rendered_outputs/gif/gt_1500_agents.gif) |  
+
+---
+
+---
+## 🏋️ Training RL
 
 Two training implementations are provided. 
 
@@ -162,39 +174,20 @@ python train_RL_parallel.py
 
 ---
 
-## Evaluation
+## 🔍 Evaluation
 
-Evaluate a trained policy
 
-```bash
-cd runners
-python evaluate_GT_parallel.py
-python evaluate_policy_parallel.py
-```
+| Number of Agents |              All Open Barrier              |                 All Closed Barrier                  |             RL Barrier              |
+|:----------------:|:------------------------------------------:|:--------------------------------------------:|:-----------------------------------------------:|
+|        10        |  ![](rendered_outputs/gif/allopen_10.gif)  |  ![](rendered_outputs/gif/allclosed_10.gif)  |  ![](rendered_outputs/gif/rl_agent_303_10.gif)  |
+|       300        | ![](rendered_outputs/gif/allopen_300.gif)  | ![](rendered_outputs/gif/allclosed_300.gif)  | ![](rendered_outputs/gif/rl_agent_303_300.gif)  |
+|       1500       | ![](rendered_outputs/gif/allopen_1500.gif) | ![](rendered_outputs/gif/allclosed_1500.gif) | ![](rendered_outputs/gif/rl_agent_303_1500.gif) |
 
----
 
-## Qualitative Results
 
-The following animations compare different barrier control strategies under various crowd densities.
 
-| Number of Agents |          Ground Truth Configuration          |                   RL Policy Configuration                   |
-|:----------------:|:--------------------------------------------:|:-----------------------------------------------------------:|
-|        10        | ![](rendered_outputs/gif/gt_10_agents.gif)  |        ![](rendered_outputs/gif/rl_agent_303_10.gif)        |
-|       300        |![](rendered_outputs/gif/gt_300_agents.gif)  |       ![](rendered_outputs/gif/rl_agent_303_300.gif)        |
-|       1500       |![](rendered_outputs/gif/gt_1500_agents.gif) |       ![](rendered_outputs/gif/rl_agent_303_1500.gif)       |
 
----
-
-| Number of Agents |              All Open Barrier              |                 All Closed Barrier                  |
-|:----------------:|:------------------------------------------:|:--------------------------------------------:|
-|        10        |  ![](rendered_outputs/gif/allopen_10.gif)  |  ![](rendered_outputs/gif/allclosed_10.gif)  |
-|       300        | ![](rendered_outputs/gif/allopen_300.gif)  | ![](rendered_outputs/gif/allclosed_300.gif)  |
-|       1500       | ![](rendered_outputs/gif/allopen_1500.gif) | ![](rendered_outputs/gif/allclosed_1500.gif) |
-
----
-
-## Paper
+## ✍️ Citation
 
 If you use this repository, please cite
 
@@ -205,17 +198,15 @@ Coming soon.
 The accompanying short paper can be found here:
 
 ```
-paper/RL_Crowd_Barrier_Control.pdf
+Coming soon.
 ```
 
 ---
 
-## Contact
+## 🪄 Contact
 
 **Alhanouf Alolyan**
 
 📧 Email: hano.alolyan@gmail.com
 
 🔗 LinkedIn: https://www.linkedin.com/in/hano-alolyan
-
-🐙 GitHub: https://github.com/HanoCat
