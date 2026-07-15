@@ -1,6 +1,6 @@
 # APBC-RL 
 
-(Adaptive Pedestrian Barrier Control using Reinforcement Learning) is a framework for optimizing pedestrian barrier configurations in JuPedSim crowd simulations. It combines image-based crowd initialization, adaptive barrier control, and reinforcement learning to learn effective barrier configurations under different crowd conditions.
+(Adaptive Pedestrian Barrier Control using Reinforcement Learning) is a framework for optimizing pedestrian barrier configurations in JuPedSim crowd simulations.
 
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
@@ -8,7 +8,7 @@
 ![JuPedSim](https://img.shields.io/badge/JuPedSim-Latest-green)
 ![Conda](https://img.shields.io/badge/Conda-Environment-brightgreen)
 
-This repo for the paper: "APBC-RL: Adaptive Pedestrian Barrier Control Framework for Crowd Simulations Based on Reinforcement Learning".
+Repo for the paper: "APBC-RL: Adaptive Pedestrian Barrier Control Framework for Crowd Simulations Based on Reinforcement Learning".
 
 
 ---
@@ -27,6 +27,8 @@ Crowd barriers are widely used to regulate pedestrian movement during large publ
 - **Built-in evaluation** – quantitative metrics, interactive HTML visualization, and qualitative analysis.
 - **Generalization experiments** – evaluate trained policies on unseen crowd scenarios.
 
+
+
 <div align="center">
 
 <img src="rendered_outputs\Overview_method.png" width="900"/>
@@ -36,34 +38,89 @@ Crowd barriers are widely used to regulate pedestrian movement during large publ
 </div>
 
 ---
+## 🔥 Quick Start
 
+### Requirements
+
+- Python 3.11
+- Miniforge (recommended)
+- JuPedSim 1.4.2
+- Torch: 2.7.1
+- CUDA: 12.8 (for GPU support)
+- 8 GB+ RAM (16 GB+ recommended for RL training)
+- **Training modes:**  Sequential (1 CPU + 1 GPU) or Parallel (12 CPU cores + 1 GPU)
+- The complete environment pkgs used for development is provided in `environment.yml`.
 
 ---
 
-## Installation
+### Installation
 
-Clone the repository
 
 ```bash
-git clone https://github.com/USERNAME/RLForHajjProject.git
+# Clone the repository
+git clone https://github.com/HanoCat/RLForHajjProject.git
 cd RLForHajjProject
-```
 
-### Create Conda environment
-
-```bash
+# Option 1: Create a Conda environment and install dependencies
 conda create -n rl_hajj python=3.11
+conda activate rl_hajj
+pip install -r requirements.txt
+
+# OR
+
+# Option 2: Recreate the development environment
+conda env create -f environment.yml
 conda activate rl_hajj
 ```
 
-Install dependencies
+### Download the P2PNet model (Optional)
+
+P2PNet is **optional** and is only required when `p2pnet_load` is enabled in the configuration files.
 
 ```bash
-pip install -r requirements.txt
+# Clone the official P2PNet repository
+git clone https://github.com/TencentYoutuResearch/CrowdCounting-P2PNet.git ./CrowdCounting-P2PNet
+
+# Install the P2PNet dependencies
+pip install -r ./CrowdCounting-P2PNet/requirements.txt
 ```
 
----
+The cloned repository includes the pre-trained model at:
 
+> `./CrowdCounting-P2PNet/weights/SHTechA.pth`
+
+---
+## 🎮 Run a Scenario
+
+Before training an RL policy, you can explore the crowd simulation environment by running a scenario. This allows you to experiment with different barrier configurations, agent initialization methods, and simulation parameters, and observe their effects through the generated metrics and interactive HTML visualization.
+
+Run the default scenario:
+
+```bash
+python main.py
+```
+
+or equivalently:
+
+```bash
+python main.py --mode scenario
+```
+
+To customize the simulation (e.g., barrier states, agent initialization, P2PNet usage, simulation parameters, or output settings), edit:
+
+```text
+config/scenario_config.py
+```
+
+The scenario mode automatically generates at `/logs/scenario`:
+
+- Initial agent position visualization
+- Interactive HTML animation
+- Simulation metrics and statistics
+- Agent trajectories (`.sqlite`)
+
+
+---
 ## Training
 
 Two training implementations are provided. 
