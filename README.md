@@ -31,7 +31,7 @@ Crowd barriers are widely used to regulate pedestrian movement during large publ
 
 <div align="center">
 
-<img src="rendered_outputs\Overview_method.png" width="900"/>
+<img src="img\Overview_method.png" width="900"/>
 
 **Figure 1.** Overview of the proposed RL-based adaptive barrier control framework.
 
@@ -126,9 +126,9 @@ The scenario mode automatically generates at `/logs/scenario`:
 
 | Number of Agents |            Ground Truth Barriers             |                  
 |:----------------:|:--------------------------------------------:|
-|        10        |  ![](rendered_outputs/gif/gt_10_agents.gif)  | 
-|       300        | ![](rendered_outputs/gif/gt_300_agents.gif)  | 
-|       1500       | ![](rendered_outputs/gif/gt_1500_agents.gif) |  
+|        10        |          ![](img/gt_10_agents.gif)           | 
+|       300        |          ![](img/gt_300_agents.gif)          | 
+|       1500       | ![](img/gt_1500_agents.gif) |  
 
 
 ## 🏋️ Train the RL
@@ -158,11 +158,11 @@ python main.py --mode train-parallel
 ## 🔍 Evaluation
 
 
-| Number of Agents |              All Open Barrier              |                 All Closed Barrier                  |             RL Barrier              |
-|:----------------:|:------------------------------------------:|:--------------------------------------------:|:-----------------------------------------------:|
-|        10        |  ![](rendered_outputs/gif/allopen_10.gif)  |  ![](rendered_outputs/gif/allclosed_10.gif)  |  ![](rendered_outputs/gif/rl_agent_303_10.gif)  |
-|       300        | ![](rendered_outputs/gif/allopen_300.gif)  | ![](rendered_outputs/gif/allclosed_300.gif)  | ![](rendered_outputs/gif/rl_agent_303_300.gif)  |
-|       1500       | ![](rendered_outputs/gif/allopen_1500.gif) | ![](rendered_outputs/gif/allclosed_1500.gif) | ![](rendered_outputs/gif/rl_agent_303_1500.gif) |
+| Number of Agents |             All Open Barrier              |              All Closed Barrier              |                   RL Barrier                    |
+|:----------------:|:-----------------------------------------:|:--------------------------------------------:|:-----------------------------------------------:|
+|        10        |          ![](img/allopen_10.gif)          |          ![](img/allclosed_10.gif)           |          ![](img/rl_agent_303_10.gif)           |
+|       300        |         ![](img/allopen_300.gif)          | ![](img/allclosed_300.gif)  | ![](img/rl_agent_303_300.gif)  |
+|       1500       |         ![](img/allopen_1500.gif)         | ![](img/allclosed_1500.gif) | ![](img/rl_agent_303_1500.gif) |
 
 
 
