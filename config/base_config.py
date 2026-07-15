@@ -46,17 +46,6 @@ CONFIG = {
         2302: {"closed": {"dx": 0.0, "dy": 0.90, "angle": -20}, "open": {"dx": 0.25, "dy": -0.10, "angle": 30}},
     },
 
-    "barrier_pair_states": {
-    "pair_1": 0.0,
-    "pair_2": 0.0,
-    "pair_3": 0.0,
-    "pair_4": 0.0,
-    "pair_5": 0.0,
-    "pair_6": 0.0,
-    "pair_7": 0.0,
-    },
-
-
     # add more synthetic agents randomly based on the different zones in the scene
     "agent_groups": [
         {

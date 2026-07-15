@@ -149,15 +149,46 @@ def load_agents(base_geometry):
     total_agents = 0
     p2pnet_positions = []
 
-    if "p2pnet_points_file" in TRAINING_CONFIG:
-        p2pnet_positions = load_p2pnet_points(
-            TRAINING_CONFIG["p2pnet_points_file"],
-            base_geometry,
-            min_score=TRAINING_CONFIG.get("p2pnet_min_score", 0.0),
-            max_agents=TRAINING_CONFIG.get("p2pnet_max_agents"),
+    use_random_agents = TRAINING_CONFIG.get("random_agents_load", False)
+    use_p2pnet_agents = TRAINING_CONFIG.get("p2pnet_load", False)
+
+    if not use_random_agents and not use_p2pnet_agents:
+        raise ValueError(
+            "Invalid training configuration: both "
+            "'random_agents_load' and 'p2pnet_load' are False. "
+            "Enable at least one agent source."
         )
 
-    with tqdm(total=len(TRAINING_CONFIG["agent_groups"]), desc="Loading groups") as pbar:
+    if use_p2pnet_agents:
+        p2pnet_file = TRAINING_CONFIG.get("p2pnet_points_file")
+
+        if not p2pnet_file:
+            raise ValueError(
+                "'p2pnet_load' is enabled, but "
+                "'p2pnet_points_file' is not configured."
+            )
+
+        p2pnet_positions = load_p2pnet_points(
+            p2pnet_file,
+            base_geometry,
+            min_score=TRAINING_CONFIG.get(
+                "p2pnet_min_score",
+                0.0,
+            ),
+            max_agents=TRAINING_CONFIG.get(
+                "p2pnet_max_agents"
+            ),
+        )
+
+        print(
+            f"P2PNet candidate positions loaded: "
+            f"{len(p2pnet_positions)}"
+        )
+
+    with tqdm(
+        total=len(TRAINING_CONFIG["agent_groups"]),
+        desc="Loading groups",
+    ) as pbar:
         for group in TRAINING_CONFIG["agent_groups"]:
             start_zone = make_zone_from_fraction(
                 base_geometry,
@@ -177,18 +208,29 @@ def load_agents(base_geometry):
                 safe_distance=TRAINING_CONFIG["safe_distance"],
             )
 
-            random_positions = random_points(
-                start_zone,
-                group["count"],
-                min_distance=TRAINING_CONFIG["min_agent_distance"],
+            random_positions = []
+            p2pnet_group_positions = []
+
+            if use_random_agents:
+                random_positions = random_points(
+                    start_zone,
+                    group["count"],
+                    min_distance=TRAINING_CONFIG[
+                        "min_agent_distance"
+                    ],
+                )
+
+            if use_p2pnet_agents:
+                p2pnet_group_positions = [
+                    pos
+                    for pos in p2pnet_positions
+                    if start_zone.covers(Point(pos))
+                ]
+
+            positions = (
+                random_positions
+                + p2pnet_group_positions
             )
-
-            p2pnet_group_positions = [
-                pos for pos in p2pnet_positions
-                if start_zone.covers(Point(pos))
-            ]
-
-            positions = random_positions + p2pnet_group_positions
 
             agent_groups.append({
                 "group_id": group["group_id"],
@@ -201,13 +243,28 @@ def load_agents(base_geometry):
             pbar.set_postfix(
                 total_agents=total_agents,
                 group_agents=len(positions),
+                random_agents=len(random_positions),
+                p2pnet_agents=len(
+                    p2pnet_group_positions
+                ),
             )
+
             pbar.update(1)
 
-    print(f"Total candidate agents loaded once: {total_agents}")
+    print(
+        "Agent sources:",
+        {
+            "random": use_random_agents,
+            "p2pnet": use_p2pnet_agents,
+        },
+    )
+
+    print(
+        f"Total candidate agents loaded once: "
+        f"{total_agents}"
+    )
+
     return agent_groups
-
-
 def is_position_valid(position, geometry):
     point = Point(position)
 

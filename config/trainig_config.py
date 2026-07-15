@@ -1,73 +1,131 @@
-
-
 from config.base_config import CONFIG
+
 
 TRAINING_CONFIG = {
     **CONFIG,
 
-    # this is only for test_reward_sensitivity.py file
-    "reward_sensitivity_agent_counts": [10, 50, 100, 200, 800],
-    "every_nth_frame_n": 5,
-    # simulation scenario settings
-    "name": "./log/four_zones_precise_test",
-    "trajectory_file": "./log/four_zones_test.sqlite",
-    "html_file": "org.html",
-    "max_iterations": 1500, # time stop for the simulation.
+    # ------------------------------------------------------------------
+    # Experiment settings
+    # ------------------------------------------------------------------
 
+    # Name used in animation titles and experiment output descriptions.
+    "name": "APBC-RL",
+
+    # Maximum number of JuPedSim iterations for each rollout.
+    "max_iterations": 1500,
+
+    # True uses the faster training simulation settings.
+    # False uses visualization settings with HTML animations enabled.
+    "training": True,
+
+
+    # ------------------------------------------------------------------
+    # Agent placement and movement
+    # ------------------------------------------------------------------
+
+    # Minimum spacing between randomly generated agents.
     "min_agent_distance": 0.4,
+
+    # Margin maintained between generated areas and geometry boundaries.
     "safe_distance": 0.2,
+
+    # Desired pedestrian speed range.
     "speed_min": 1.0,
     "speed_max": 1.4,
 
-    # SAC train
-    "use_exp_reward": True,
-    "reward_alpha_exp": 3.0,
-    "reward_scale": 1.0,
 
+    # ------------------------------------------------------------------
+    # Reinforcement learning settings
+    # ------------------------------------------------------------------
+
+    # Total number of training episodes.
     "num_episodes": 100,
-    "num_steps": 10,  # parallel rollouts per episode
-    "stages_test": [[0,20],[20,50],[50,80],[80,100]],
-    "stages_train": [[],[],[],[]],
-    "start_random_episodes": 2,
+
+    # Sequential mode:
+    #   Number of consecutive simulation rollouts per episode.
+    #
+    # Parallel mode:
+    #   Number of simulation rollout jobs submitted per episode.
+    "num_steps": 10,
+
+    # Number of replay-buffer samples used for each SAC update.
     "batch_size_rl": 64,
-    "eval_freq_rl": 25,
+
+    # Maximum number of transitions stored in the replay buffer.
+    "replay_buffer_size": 100000,
+
+    # Save checkpoints and plots every N episodes.
     "save_every_episodes": 25,
+
+    # Also trigger checkpoint and plot saving every N episodes.
+    "eval_freq_rl": 25,
+
+    # Save a checkpoint when the episode reward reaches this value.
     "best_reward_threshold": 0.85,
 
-    "epsilon_start": 1.0,
-    "epsilon_end": 0.05,
-    "epsilon_decay_episodes": 200,
 
+    # ------------------------------------------------------------------
+    # Curriculum settings
+    # ------------------------------------------------------------------
+
+    # Allow occasional heavy-crowd samples during early training.
     "early_heavy_until_episode": 20,
+
+    # Probability of selecting an early heavy-crowd sample.
     "early_heavy_probability": 0.05,
 
+    # Curriculum learning stages.
+    "stages_test": [
+        [0, 20],
+        [20, 50],
+        [50, 80],
+        [80, 100],
+    ],
 
-    "training": True,
+    # ------------------------------------------------------------------
+    # Parallel training settings
+    # ------------------------------------------------------------------
 
-    # Parallel RL training settings
-    "num_parallel_workers": 10,  # start safe on A4000x2/16 CPU; try 12 later if stable
+    # Number of CPU worker processes running JuPedSim rollouts.
+    "num_parallel_workers": 10,
+
+    # Number of SAC gradient updates after each parallel rollout batch.
     "train_updates_per_batch": 10,
-    "replay_buffer_size": 100000,
-    "parallel_trajectory_dir": "/tmp/rl_hajj_trajectories",
+
+    # Keep worker SQLite trajectory files after metrics are calculated.
+    # False saves disk space and is recommended during training.
     "keep_worker_trajectories": False,
 
+
+    # ------------------------------------------------------------------
+    # Simulation modes
+    # ------------------------------------------------------------------
+
+    # Fast settings used during RL training.
     "simulation_mode_training": {
+        # Simulation time step in seconds.
         "dt": 0.05,
-        "training_num_agents": 100,   # use None for all agents
+
+        # Randomize the selected agent subset for each rollout.
         "shuffle_agents_each_episode": True,
+
+        # Store one trajectory frame every N simulation iterations.
         "every_nth_frame": 20,
 
-
+        # Required for trajectory-based PedPy reward metrics.
         "write_trajectory": True,
+
+        # Keep disabled during training to avoid animation overhead.
         "save_animation": False,
     },
 
+    # Settings used for debugging and visual inspection.
     "simulation_mode_vis": {
         "dt": 0.05,
-        "training_num_agents": None,
         "shuffle_agents_each_episode": True,
-        "every_nth_frame": 5,
 
+        # Smaller values generate smoother animations but larger files.
+        "every_nth_frame": 5,
 
         "write_trajectory": True,
         "save_animation": True,
@@ -75,171 +133,33 @@ TRAINING_CONFIG = {
 
 
 
-    # load file of built env
-    "env_json": "../json/processed_environment.json",
+    # ------------------------------------------------------------------
+    # Initial barrier states
+    # ------------------------------------------------------------------
 
-    ### Movable barrier ###
-    "movable_barrier_ids": [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 2301, 2302],
-
-    "barrier_pairs": {
-        "pair_1": (12, 13),
-        "pair_2": (14, 15),
-        "pair_3": (16, 17),
-        "pair_4": (18, 19),
-        "pair_5": (20, 22),
-        "pair_6": (21, 24),
-        "pair_7": (2301, 2302),
-    },
-
-    "barrier_pose_config": {
-        12: {"closed": {"dx": -0.20, "dy": -0.30, "angle": -1}, "open": {"dx": 0.0, "dy": 0.30, "angle": -30}},
-        13: {"closed": {"dx": -0.30, "dy": 0.90, "angle": 10}, "open": {"dx": 0.0, "dy": -0.35, "angle": 30}},
-
-        14: {"closed": {"dx": 0.35, "dy": -0.60, "angle": 1}, "open": {"dx": 0.0, "dy": 0.0, "angle": -25}},
-        15: {"closed": {"dx": -0.30, "dy": 0.70, "angle": -1}, "open": {"dx": 0.0, "dy": 0.0, "angle": 30}},
-
-        16: {"closed": {"dx": 0.0, "dy": -0.75, "angle": 15}, "open": {"dx": -0.25, "dy": 0.15, "angle": -30}},
-        17: {"closed": {"dx": 0.0, "dy": 0.75, "angle": -10}, "open": {"dx": 0.30, "dy": -0.40, "angle": 35}},
-
-        18: {"closed": {"dx": 0.0, "dy": 0.20, "angle": 0}, "open": {"dx": -0.20, "dy": -0.25, "angle": -50}},
-        19: {"closed": {"dx": 1.50, "dy": -0.60, "angle": -10}, "open": {"dx": 0.25, "dy": 0.20, "angle": 30}},
-
-        20: {"closed": {"dx": 0.0, "dy": 0.25, "angle": 0}, "open": {"dx": -0.30, "dy": 0.20, "angle": 30}},
-        22: {"closed": {"dx": 0.0, "dy": -0.25, "angle": 0}, "open": {"dx": -0.20, "dy": 0.0, "angle": -30}},
-
-        21: {"closed": {"dx": 0.0, "dy": -0.55, "angle": 0}, "open": {"dx": 0.25, "dy": 0.10, "angle": -25}},
-        24: {"closed": {"dx": 0.0, "dy": 0.90, "angle": -10}, "open": {"dx": -0.25, "dy": -0.25, "angle": 30}},
-
-        2301: {"closed": {"dx": 0.0, "dy": -0.80, "angle": 15}, "open": {"dx": -0.25, "dy": -0.15, "angle": -30}},
-        2302: {"closed": {"dx": 0.0, "dy": 0.90, "angle": -20}, "open": {"dx": 0.25, "dy": -0.10, "angle": 30}},
-    },
-
+    # Initial state used for fixed curriculum cases.
+    #
+    # 0.0 = fully closed
+    # 1.0 = fully open
+    # Values between 0.0 and 1.0 represent intermediate poses.
     "barrier_pair_states": {
-    "pair_1": 0.0,
-    "pair_2": 1.0,
-    "pair_3": 1.0,
-    "pair_4": 1.0,
-    "pair_5": 1.0,
-    "pair_6": 1.0,
-    "pair_7": 1.0,
+        "pair_1": 0.0,
+        "pair_2": 1.0,
+        "pair_3": 1.0,
+        "pair_4": 1.0,
+        "pair_5": 1.0,
+        "pair_6": 1.0,
+        "pair_7": 1.0,
     },
 
 
-    ### Agents Initialization ###
+    # ------------------------------------------------------------------
+    # Agent initialization
+    # ------------------------------------------------------------------
 
-
-    # add more synthetic agents randomly based on the different zones in the scene
-    "agent_groups": [
-        {
-            "group_id": "ZONE1_1",
-            "count": 5,
-            "start_box_frac": (0.86, 0.82, 0.98, 0.98),
-            "mid_box_frac":   (0.76, 0.82, 0.85, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE1_2",
-            "count": 5,
-            "start_box_frac": (0.76, 0.82, 0.85, 0.98),
-            "mid_box_frac": (0.63, 0.82, 0.73, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE1_3",
-            "count": 5,
-            "start_box_frac": (0.63, 0.82, 0.73, 0.98),
-            "mid_box_frac": (0.56, 0.82, 0.63, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE1_4",
-            "count": 5,
-            "start_box_frac": (0.56, 0.82, 0.63, 0.98),
-            "mid_box_frac": (0.30, 0.82, 0.53, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE1_5",
-            "count": 5,
-            "start_box_frac": (0.30, 0.82, 0.53, 0.98),
-            "mid_box_frac": (0.09, 0.82, 0.23, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {## final zone 1
-            "group_id": "ZONE1_6",
-            "count": 5,
-            "start_box_frac": (0.09, 0.82, 0.23, 0.98),
-            "goal_box_frac":  (0.00, 0.78, 0.04, 1.0),
-        },
-        {
-            "group_id": "ZONE2_1",
-            "count": 5,
-            "start_box_frac": (0.65, 0.26, 0.99, 0.42),
-            "mid_box_frac": (0.60, 0.26, 0.65, 0.42),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {
-            "group_id": "ZONE2_2",
-            "count": 5,
-            "start_box_frac": (0.60, 0.26, 0.65, 0.42),
-            "mid_box_frac": (0.32, 0.26, 0.58, 0.50),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {
-            "group_id": "ZONE2_3",
-            "count": 5,
-            "start_box_frac": (0.32, 0.26, 0.58, 0.50),
-            "mid_box_frac": (0.25, 0.30, 0.32, 0.50),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {
-            "group_id": "ZONE2_4",
-            "count": 5,
-            "start_box_frac": (0.25, 0.30, 0.32, 0.50),
-            "mid_box_frac": (0.09, 0.35, 0.23, 0.50),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {## final zone 2
-            "group_id": "ZONE2_5",
-            "count": 5,
-            "start_box_frac": (0.09, 0.35, 0.23, 0.50),
-            "goal_box_frac":   (0.0, 0.30, 0.04, 0.55),
-        },
-        {
-            "group_id": "ZONE3_1",
-            "count": 5,
-            "start_box_frac": (0.60, 0.00, 0.99, 0.14),
-            "mid_box_frac": (0.55, 0.00, 0.60, 0.14),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-        {
-            "group_id": "ZONE3_2",
-            "count": 5,
-            "start_box_frac": (0.55, 0.00, 0.60, 0.14),
-            "mid_box_frac": (0.30, 0.00, 0.52, 0.25),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-        {
-            "group_id": "ZONE3_3",
-            "count": 5,
-            "start_box_frac": (0.30, 0.00, 0.52, 0.25),
-            "mid_box_frac": (0.22, 0.00, 0.30, 0.27),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-        {
-            "group_id": "ZONE3_4",
-            "count": 5,
-            "start_box_frac": (0.22, 0.00, 0.30, 0.27),
-            "mid_box_frac": (0.09, 0.00, 0.19, 0.30),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-        { ## final zone 3
-            "group_id": "ZONE3_5",
-            "count": 5,
-            "start_box_frac": (0.09, 0.00, 0.19, 0.30),
-            "goal_box_frac":  (0.00, 0.24, 0.07, 0.42),
-        },
-    ],
-
-
+    # At least one source must be enabled.
+    #
+    # Both may be True to combine random and P2PNet positions.
+    "p2pnet_load": False,
+    "random_agents_load": True,
 }

@@ -122,7 +122,7 @@ The scenario mode automatically generates at `/logs/scenario`:
 
 ---
 
-## 👾 Ground of Truth Scenarios Examples
+## 👾 Ground-Truth Crowd Scenarios
 
 | Number of Agents |            Ground Truth Barriers             |                  
 |:----------------:|:--------------------------------------------:|
@@ -130,48 +130,29 @@ The scenario mode automatically generates at `/logs/scenario`:
 |       300        | ![](rendered_outputs/gif/gt_300_agents.gif)  | 
 |       1500       | ![](rendered_outputs/gif/gt_1500_agents.gif) |  
 
----
 
----
-## 🏋️ Training RL
+## 🏋️ Train the RL
 
-Two training implementations are provided. 
+This repo supports two training modes. The experiments reported in this repository were conducted on a Paperspace cloud workstation with:
 
-Our experimental setup: 
+> **Experimental setup:** NVIDIA RTX A4000 (16 GB VRAM), 12 CPU cores.  
+> **Parallel training time:** ~4 hours 44 minutes for 100 episodes.
 
-The proposed framework was trained on a Paperspace cloud workstation with NVIDIA RTX A4000 GPUs (16 GB) and 12 CPU cores. Parallel crowd simulations were used during training, and 100 episodes were completed in approximately 4 h 44 min.
-### Option 1 — Standard Training
+### Option 1 — Sequential Training
 
-Recommended for a single workstation.
-
-Resources
-
-- 1 CPU
-- 1 GPU
+Use a single CPU for simulation and a single GPU for RL training.
 
 ```bash
-cd runners
-python train_RL.py
+python main.py --mode train-seq
 ```
 
----
+### Option 2 — Parallel Training (Recommended)
 
-### Option 2 — Parallel Training
-
-Designed for multi-core machines.
-
-Resources
-
-- 1 GPU
-- N CPU cores
-
-The environment rollouts are executed in parallel while the neural network is updated on a single GPU.
+Run multiple crowd simulations on 12 CPU cores while training the RL model on a single GPU.
 
 ```bash
-cd runners
-python train_RL_parallel.py
+python main.py --mode train-parallel
 ```
-
 ---
 
 ## 🔍 Evaluation
@@ -192,7 +173,14 @@ python train_RL_parallel.py
 If you use this repository, please cite
 
 ```bibtex
-Coming soon.
+@inproceedings{
+hano2026APBC,
+title={},
+author={},
+booktitle={},
+editor={},
+year={2026},
+url={}
 ```
 
 The accompanying short paper can be found here:
