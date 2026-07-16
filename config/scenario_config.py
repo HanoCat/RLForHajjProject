@@ -28,24 +28,7 @@ TRAINING_CONFIG = {
     "max_iterations": 1500,
 
 
-    # ------------------------------------------------------------------
-    # Agent initialization settings
-    # ------------------------------------------------------------------
 
-    # Important:
-    # At least one of the following options must be True.
-    #
-    # p2pnet_load:
-    #   Load initial agent positions extracted from the crowd image
-    #   using P2PNet detections.
-    #
-    # random_agents_load:
-    #   Generate random initial agent positions inside each start zone.
-    #
-    # Both can be True if you want to combine random agents and
-    # P2PNet-detected agents in the same simulation.
-    "p2pnet_load": False,
-    "random_agents_load": True,
 
 
     # ------------------------------------------------------------------

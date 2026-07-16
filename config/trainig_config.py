@@ -153,13 +153,5 @@ TRAINING_CONFIG = {
     },
 
 
-    # ------------------------------------------------------------------
-    # Agent initialization
-    # ------------------------------------------------------------------
 
-    # At least one source must be enabled.
-    #
-    # Both may be True to combine random and P2PNet positions.
-    "p2pnet_load": False,
-    "random_agents_load": True,
 }

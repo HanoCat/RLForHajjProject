@@ -1,91 +1,142 @@
-
-
 from config.base_config import CONFIG
 
-EVAL_CONFIG = {
+EVALUATION_CONFIG = {
     **CONFIG,
 
-    # this is only for test_reward_sensitivity.py file
-    "reward_sensitivity_agent_counts": [10, 50, 100, 200, 800],
-    "every_nth_frame_n": 5,
-    # simulation scenario settings
-    "name": "./log/four_zones_precise_test",
-    "trajectory_file": "./log/four_zones_test.sqlite",
-    "html_file": "org.html",
-    "max_iterations": 1500, # time stop for the simulation.
+    # ------------------------------------------------------------------
+    # Trained RL policy
+    # ------------------------------------------------------------------
 
-    "min_agent_distance": 0.4,
-    "safe_distance": 0.2,
-    "speed_min": 1.0,
-    "speed_max": 1.4,
-
-    # SAC train
-    "use_exp_reward": True,
-    "reward_alpha_exp": 3.0,
-    "reward_scale": 1.0,
-
-    "num_episodes": 100,
-    "num_steps": 10,  # parallel rollouts per episode
-    "stages_test": [[0,20],[20,50],[50,80],[80,100]],
-    "stages_train": [[],[],[],[]],
-    "start_random_episodes": 2,
-    "batch_size_rl": 64,
-    "eval_freq_rl": 25,
-    "save_every_episodes": 25,
-    "best_reward_threshold": 0.85,
-
-    "epsilon_start": 1.0,
-    "epsilon_end": 0.05,
-    "epsilon_decay_episodes": 200,
-
-    "early_heavy_until_episode": 20,
-    "early_heavy_probability": 0.05,
+    # Path to the trained SAC policy (.pickle) used for evaluation.
+    "policy_path": "./models/RL_model.pickle",
 
 
-    "training": True,
+    # ------------------------------------------------------------------
+    # Evaluation settings
+    # ------------------------------------------------------------------
 
-    # Parallel RL training settings
-    "num_parallel_workers": 10,  # start safe on A4000x2/16 CPU; try 12 later if stable
-    "train_updates_per_batch": 10,
-    "replay_buffer_size": 100000,
-    "parallel_trajectory_dir": "/tmp/rl_hajj_trajectories",
-    "keep_worker_trajectories": False,
+    # Random seeds used for repeated evaluation.
+    # The reported results are averaged across all seeds.
+    "seeds": [101, 202, 303, 404, 505],
 
-    "simulation_mode_training": {
+    # Number of agents evaluated for each seed.
+    "num_agents_list": [5, 300, 500, 700, 900, 1000, 1500],
+
+    # Evaluation methods.
+    #
+    # rl_policy:
+    #     Adaptive barrier configuration predicted by the trained RL policy.
+    #
+    # gt_original:
+    #     Original environment without adaptive barrier control.
+    #
+    # all_open:
+    #     All barrier pairs fully open.
+    #
+    # all_closed:
+    #     All barrier pairs fully closed.
+    #
+    # random:
+    #     Random barrier configuration (optional baseline).
+    #
+    # rule_based:
+    #     User-defined rule-based barrier configuration (optional baseline).
+    "methods": [
+        "rl_policy",
+        "gt_original",
+        "all_open",
+        "all_closed",
+    ],
+
+    # Display names used in plots and result figures.
+    "method_display_names": {
+        "rl_policy": "RL policy",
+        "gt_original": "Original layout",
+        "all_open": "All open",
+        "all_closed": "All closed",
+        "random": "Random",
+        "rule_based": "Rule based",
+    },
+
+
+    # ------------------------------------------------------------------
+    # Parallel evaluation settings
+    # ------------------------------------------------------------------
+
+    # Number of CPU workers used to evaluate simulations in parallel.
+    "num_workers": 10,
+
+    # Keep trajectory (.sqlite) files after evaluation.
+    # False is recommended unless trajectories are needed for debugging.
+    "keep_trajectories": False,
+
+    # Shuffle the selected agent subset before each evaluation run.
+    "shuffle_agents": True,
+
+    # Maximum simulation iterations before stopping.
+    "max_iterations": 1500,
+
+
+    # ------------------------------------------------------------------
+    # Simulation settings
+    # ------------------------------------------------------------------
+
+    "simulation": {
+
+        # Simulation time step (seconds).
         "dt": 0.05,
-        "training_num_agents": 100,   # use None for all agents
+
+        # Randomize the selected agent subset for each evaluation.
         "shuffle_agents_each_episode": True,
+
+        # Save one trajectory frame every N simulation iterations.
         "every_nth_frame": 20,
 
-
+        # Required for PedPy metric computation.
         "write_trajectory": True,
+
+        # HTML animations are disabled during evaluation for speed.
         "save_animation": False,
     },
 
-    "simulation_mode_vis": {
-        "dt": 0.05,
-        "training_num_agents": None,
-        "shuffle_agents_each_episode": True,
-        "every_nth_frame": 5,
+    # ------------------------------------------------------------------
+    # RL policy input state
+    # ------------------------------------------------------------------
 
+    # If True, the policy starts from a random barrier configuration.
+    # If False, the fixed barrier states below are used.
+    "random_policy_initial_state": False,
 
-        "write_trajectory": True,
-        "save_animation": True,
+    # Fixed initial barrier configuration used when
+    # random_policy_initial_state is False.
+    "policy_initial_barrier_states": {
+        "pair_1": 1.0,
+        "pair_2": 1.0,
+        "pair_3": 1.0,
+        "pair_4": 1.0,
+        "pair_5": 1.0,
+        "pair_6": 1.0,
+        "pair_7": 1.0,
     },
 
-    # load file of built env
-    "env_json": "../json/processed_environment.json",
 
+    # ------------------------------------------------------------------
+    # Fixed barrier baseline
+    # ------------------------------------------------------------------
+
+    # Barrier configuration used for methods that require a predefined
+    # adaptive layout (e.g., creating the candidate-agent pool).
+    #
+    # 0.0 = fully closed
+    # 1.0 = fully open
+    # Values between 0.0 and 1.0 represent intermediate barrier states.
     "barrier_pair_states": {
-    "pair_1": 0.0,
-    "pair_2": 1.0,
-    "pair_3": 1.0,
-    "pair_4": 1.0,
-    "pair_5": 1.0,
-    "pair_6": 1.0,
-    "pair_7": 1.0,
+        "pair_1": 0.0,
+        "pair_2": 1.0,
+        "pair_3": 1.0,
+        "pair_4": 1.0,
+        "pair_5": 1.0,
+        "pair_6": 1.0,
+        "pair_7": 1.0,
     },
-
-
-
 }

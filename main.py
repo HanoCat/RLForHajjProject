@@ -8,7 +8,6 @@ from runners.evaluate import evaluate
 
 from pathlib import Path
 
-
 def prepare_log_dir(mode):
     root_log_dir = Path("logs")
     root_log_dir.mkdir(exist_ok=True)
@@ -32,7 +31,7 @@ def main():
 
     parser.add_argument(
         "--mode",
-        default="scenario",
+        default="evaluate",
         choices=["scenario", "train-seq", "train-parallel", "evaluate"],
         help="Choose what to run.",
     )
