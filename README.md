@@ -198,3 +198,8 @@ Coming soon.
 📧 Email: hano.alolyan@gmail.com
 
 🔗 LinkedIn: https://www.linkedin.com/in/hano-alolyan
+
+---
+
+## LICENSE
+APBC-RL has an MIT license, as found in the [LICENSE](LICENSE) file.
