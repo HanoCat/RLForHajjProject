@@ -1,18 +1,70 @@
 
 
 CONFIG = {
-    # load file of built env
+    # ------------------------------------------------------------------
+    # Environment
+    # ------------------------------------------------------------------
+
+    # Processed environment file used to build the JuPedSim geometry.
+    #
+    # This JSON should contain:
+    # - the walkable environment geometry,
+    # - barrier polygons,
+    # - barrier IDs,
+    # - any other geometry information required by the simulation.
     "env_json": "./json/processed_environment.json",
 
-    # load agents from the head detection of the scene
+
+    # ------------------------------------------------------------------
+    # P2PNet agent detections
+    # ------------------------------------------------------------------
+
+    # JSON file containing pedestrian positions detected from the
+    # original crowd image using P2PNet.
     "p2pnet_points_file": "./json/p2pnet_points.json",
+
+    # Minimum P2PNet confidence score required to keep a detection.
+    #
+    # Higher values keep only more confident detections.
     "p2pnet_min_score": 0.5,
+
+    # Maximum number of P2PNet-detected agents to load.
+    #
+    # Use None to keep all valid detections.
     "p2pnet_max_agents": None,
 
-    ### Movable barrier ###
-    "movable_barrier_ids": [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 2301, 2302],
 
+    # ------------------------------------------------------------------
+    # Movable barriers
+    # ------------------------------------------------------------------
 
+    # IDs of all barriers that can move during scenario execution,
+    # training, and evaluation.
+    "movable_barrier_ids": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        24,
+        2301,
+        2302,
+    ],
+
+    # Barriers are controlled in pairs.
+    #
+    # Each pair is represented by one continuous state:
+    #
+    # 0.0 = fully closed
+    # 1.0 = fully open
+    #
+    # Intermediate values interpolate between the closed and open poses.
     "barrier_pairs": {
         "pair_1": (12, 13),
         "pair_2": (14, 15),
@@ -23,6 +75,28 @@ CONFIG = {
         "pair_7": (2301, 2302),
     },
 
+    # ------------------------------------------------------------------
+    # Barrier poses
+    # ------------------------------------------------------------------
+
+    # Closed and open poses for every movable barrier.
+    #
+    # dx:
+    #     Horizontal translation relative to the barrier's original
+    #     position.
+    #
+    # dy:
+    #     Vertical translation relative to the barrier's original
+    #     position.
+    #
+    # angle:
+    #     Rotation angle in degrees relative to the original pose.
+    #
+    # Continuous barrier states between 0.0 and 1.0 are created by
+    # interpolating between these closed and open values.
+    #
+    # These values are specific to the current environment and were chosen
+    # to keep barriers inside the valid walkable geometry.
     "barrier_pose_config": {
         12: {"closed": {"dx": -0.20, "dy": -0.30, "angle": -1}, "open": {"dx": 0.0, "dy": 0.30, "angle": -30}},
         13: {"closed": {"dx": -0.30, "dy": 0.90, "angle": 10}, "open": {"dx": 0.0, "dy": -0.35, "angle": 30}},
@@ -46,7 +120,6 @@ CONFIG = {
         2302: {"closed": {"dx": 0.0, "dy": 0.90, "angle": -20}, "open": {"dx": 0.25, "dy": -0.10, "angle": 30}},
     },
 
-    # add more synthetic agents randomly based on the different zones in the scene
 
     # ------------------------------------------------------------------
     # Agent initialization
@@ -57,6 +130,37 @@ CONFIG = {
     # Both may be True to combine random and P2PNet positions.
     "p2pnet_load": False,
     "random_agents_load": True,
+
+    # ------------------------------------------------------------------
+    # Agent groups and movement zones
+    # ------------------------------------------------------------------
+
+    # Each group defines where agents start and where they move.
+    #
+    # group_id:
+    #     Unique readable name for the group.
+    #
+    # count:
+    #     Number of randomly generated agents for this group.
+    #     This value is used only when random_agents_load is True.
+    #
+    # start_box_frac:
+    #     Fractional bounding box used to create the start zone.
+    #
+    # mid_box_frac:
+    #     Optional intermediate movement zone.
+    #     Some helper functions may use this to represent the next section
+    #     of a pedestrian route.
+    #
+    # goal_box_frac:
+    #     Fractional bounding box used to create the final goal zone.
+    #
+    # Fractional box format:
+    #
+    #     (xmin_fraction, ymin_fraction, xmax_fraction, ymax_fraction)
+    #
+    # Each value must normally be between 0.0 and 1.0 and is interpreted
+    # relative to the full environment bounds.
 
     "agent_groups": [
         {

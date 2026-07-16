@@ -97,12 +97,6 @@ Before training an RL policy, you can explore the crowd simulation environment b
 Run the default scenario:
 
 ```bash
-python main.py
-```
-
-or equivalently:
-
-```bash
 python main.py --mode scenario
 ```
 
