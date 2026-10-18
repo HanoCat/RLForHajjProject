@@ -167,14 +167,15 @@ python main.py --mode train-parallel
 If you use this repository, please cite
 
 ```bibtex
-@inproceedings{
-hano2026APBC,
-title={},
-author={},
-booktitle={},
-editor={},
-year={2026},
-url={}
+
+@inproceedings{hano2026APBC,
+  title     = {Reinforcement Learning for Adaptive Crowd Flow Control Using Dynamic Barriers},
+  author    = {Alolyan, Alhanof and Wang, He and Alonayzan, Amani},
+  booktitle = {26th Scientific Forum for Hajj, Umrah and Visit Research},
+  year      = {2026},
+  note      = {Umm Al-Qura University, Saudi Arabia}
+}
+
 ```
 
 The accompanying short paper can be found here:
