@@ -167,12 +167,15 @@ If you use this repository, please cite
 
 ```bibtex
 
-@inproceedings{hano2026APBC,
-  title     = {Reinforcement Learning for Adaptive Crowd Flow Control Using Dynamic Barriers},
-  author    = {Alolyan, Alhanof and Wang, He and Alonayzan, Amani},
-  booktitle = {26th Scientific Forum for Hajj, Umrah and Visit Research},
-  year      = {2026},
-  note      = {Umm Al-Qura University, Saudi Arabia}
+@inproceedings{alolyan2026reinforcementlearningadaptivecrowd,
+      title={Reinforcement Learning for Adaptive Crowd Flow Control Using Dynamic Barriers}, 
+      author={Alhanof Alolyan and He Wang and Amani Alonayzan},
+      year={2026},
+      eprint={2610.34163},
+      archivePrefix={arXiv},
+      url={https://arxiv.org/abs/2610.34163},
+      note={Umm Al-Qura University, Saudi Arabia},
+      booktitle = {26th Scientific Forum for Hajj, Umrah and Visit Research}
 }
 
 ```
