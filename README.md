@@ -8,8 +8,7 @@
 ![JuPedSim](https://img.shields.io/badge/JuPedSim-Latest-green)
 ![Conda](https://img.shields.io/badge/Conda-Environment-brightgreen)
 
-Repo for the paper: "APBC-RL: Adaptive Pedestrian Barrier Control Framework for Crowd Simulations Based on Reinforcement Learning".
-
+**Publication:** Alolyan et al. (2026). *Reinforcement Learning for Adaptive Crowd Flow Control Using Dynamic Barriers*. [arXiv:2610.34163](https://arxiv.org/abs/2610.34163).
 
 ---
 
