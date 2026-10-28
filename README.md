@@ -180,11 +180,6 @@ If you use this repository, please cite
 
 ```
 
-The accompanying short paper can be found here:
-
-```
-Coming soon.
-```
 
 ---
 
